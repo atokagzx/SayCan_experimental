@@ -5,7 +5,7 @@
     <arg name="use_rviz" default="true"/>
     <arg name="fake" default="false"/>
     <arg name="use_gripper" default="true"/>
-    <arg name="rviz_config" default="$(find alpaca_bringup)/rviz/alpaca.rviz"/>
+    <arg name="rviz_config" default="$(find alpaca_bringup)/rviz/bringup.rviz"/>
 
 
     <include unless="$(arg fake)"
@@ -34,7 +34,9 @@
     </include>
 
     <include if="$(arg use_rviz)"
-        file="$(find alpaca_moveit_config)/launch/moveit_rviz.launch" />
+        file="$(find alpaca_moveit_config)/launch/moveit_rviz.launch">
+        <arg name="config" value="$(arg rviz_config)"/>
+    </include>
     
     <node if="$(arg use_gripper)"
         name="wsg_50_driver"  pkg="wsg_50_driver" type="wsg_50_ip" output="screen" respawn="true">

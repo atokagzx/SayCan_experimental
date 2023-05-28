@@ -13,3 +13,6 @@
 [submodule "modules/GroundingDINO"]
 	path = modules/GroundingDINO
 	url = https://github.com/IDEA-Research/GroundingDINO.git
+[submodule "ros_ws/src/moveit_calibration"]
+	path = ros_ws/src/moveit_calibration
+	url = https://github.com/ros-planning/moveit_calibration.git
