@@ -157,9 +157,22 @@ WORKDIR /GroundingDINO
 RUN pip3 install .
 WORKDIR /
 RUN pip3 install seaborn
+RUN apt update && apt install -y ros-noetic-moveit-visual-tools \
+                                ros-noetic-handeye \
+                                ros-noetic-criutils \
+                                ros-noetic-baldor \
+                                ros-noetic-rosunit \
+                                ros-noetic-tf2-eigen \
+                                ros-noetic-tf2-geometry-msgs \
+                                libjsoncpp-dev \
+                                libopencv-dev
+
+RUN apt update && apt install -y python3-numpy python-numpy
+
 # ENV PATH="/usr/local/cuda-12.1/bin:$PATH"
 # ENV LD_LIBRARY_PATH="/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH"
 ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_connector/:/workspace/modules/vild/:/Grounded-Segment-Anything/"
+WORKDIR /
 RUN /bin/bash -c 'echo "source /opt/ros/noetic/setup.bash; source /workspace/ros_ws/devel/setup.bash --extend"  >> ~/.bashrc'
 WORKDIR /workspace
 ENTRYPOINT /bin/bash -c 'source /opt/ros/noetic/setup.bash && cd /workspace/ros_ws && catkin_make && source /workspace/ros_ws/devel/setup.bash --extend && cd .. && pip3 install /GroundingDINO && /bin/bash'
