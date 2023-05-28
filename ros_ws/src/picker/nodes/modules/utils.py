@@ -2,7 +2,7 @@
 
 import numpy as np
 from typing import List, Tuple, Dict, Iterable
-from classes import Circle, Box
+from modules.classes import Circle, Box, Item
 import cv2
 
 class CroppedImage:
@@ -39,6 +39,24 @@ class CroppedImage:
                             
     def __call__(self):
         return self.image
+    
+    def coords_transform(self, items: Iterable[Item]) -> Iterable[Item]:
+        """Transforms the coordinates of the given items to the original image coordinates
+        Mutates the items
+        @param items: The items to transform
+        @return: The transformed items
+        """
+        x1, y1, x2, y2 = self.crop_box
+        for item in items:
+            item.pos += np.array([x1, y1])
+            new_mask = np.zeros((*self._original_shape[:2], 1), dtype=np.uint8)
+            new_mask[y1:y2, x1:x2] = item.mask
+            item.mask = new_mask
+            if isinstance(item, Box):
+                item.bbox += np.array([x1, y1, x1, y1])
+                item.rotated_rect += np.array([x1, y1])
+        return items
+
 
 class DrawingUtils:
 
@@ -80,8 +98,9 @@ class DrawingUtils:
         cv2.putText(image, f"score: {item.score:.2f}", (item.bbox[0], item.bbox[1] + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, black, 2)
         cv2.putText(image, f"area: {item.area}", (item.bbox[0], item.bbox[1] + 40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, black, 2)
         cv2.putText(image, f"rr_area: {item.rotated_rect_area}", (item.bbox[0], item.bbox[1] + 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, black, 2)
-        cv2.putText(image, f"h_w: {item.height:.2f} x {item.width:.2f}", (item.bbox[0], item.bbox[1] + 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, black, 2)
+        cv2.putText(image, f"h_l: {item.length} x {item.width}", (item.bbox[0], item.bbox[1] + 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, black, 2)
         cv2.putText(image, f"angle: {int(np.rad2deg(item.angle))}", (item.bbox[0], item.bbox[1] + 100), cv2.FONT_HERSHEY_SIMPLEX, 0.6, black, 2)
+        cv2.putText(image, f"pos: {item.pos}", (item.bbox[0], item.bbox[1] + 120), cv2.FONT_HERSHEY_SIMPLEX, 0.6, black, 2)
         # cv2.putText(image, f"phr: {item.phrase}", (item.bbox[0], item.bbox[1] + 40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, black, 2)
 
         # draw line from center to bbox at angle
@@ -102,3 +121,19 @@ class DrawingUtils:
         colored_mask = np.array(colored_mask, dtype=np.uint8)
         image = cv2.addWeighted(image, 1, colored_mask, 1, 0)
         return image
+
+def normalize_depth(depth_map, low, high):
+    depth_map = depth_map.astype(float)
+    undetectable_mask = depth_map == 0
+    depth_map = (depth_map - low) / (high - low)
+    # 10, 11 and 12 are magic numbers for clipping
+    depth_map[depth_map > 1] = 10
+    depth_map[depth_map < 0] = 11
+    higher_mask = depth_map == 10
+    lower_mask = depth_map == 11
+    depth_map = np.clip(depth_map, 0, 1)
+    depth_map = cv2.applyColorMap((depth_map * 255).astype(np.uint8), cv2.COLORMAP_RAINBOW)
+    depth_map[higher_mask] = (255, 255, 255)
+    depth_map[lower_mask] = (100, 100, 100)
+    depth_map[undetectable_mask] = (0, 0, 0)
+    return depth_map

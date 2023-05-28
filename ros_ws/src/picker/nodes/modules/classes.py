@@ -23,11 +23,11 @@ class Circle(Item):
 
 @dataclass
 class Box(Item):
-    bbox: np.ndarray
+    bbox: np.ndarray # [x1, y1, x2, y2]
     bbox_area: int
     # phrase: str
-    angle: float
+    angle: float # in radians
     width: int
-    height: int
-    rotated_rect: np.ndarray
+    length: int
+    rotated_rect: np.ndarray # [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
     rotated_rect_area: int

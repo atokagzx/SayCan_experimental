@@ -7,8 +7,8 @@ from time import sleep
 import cv2
 import numpy as np
 
-from classes import Circle
-from utils import DrawingUtils
+from modules.classes import Circle
+from modules.utils import DrawingUtils
 
 class PlateDetector:
     colors = {
@@ -74,7 +74,7 @@ class PlateDetector:
             mask = np.zeros(hsv_ranged.shape, dtype=np.uint8)
             mask = np.expand_dims(mask, axis=2)
             cv2.drawContours(mask, [c], -1, 255, -1)
-            area = cv2.countNonZero(mask)
+            area = int(cv2.countNonZero(mask))
             circle_area = np.pi * radius**2
             solidity = area / circle_area
             circle = {

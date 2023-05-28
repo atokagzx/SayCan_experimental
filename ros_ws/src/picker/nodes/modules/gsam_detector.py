@@ -19,9 +19,9 @@ import torch
 from huggingface_hub import hf_hub_download
 from rospy import loginfo, logerr, logwarn
 
-from utils import CroppedImage, DrawingUtils
+from modules.utils import CroppedImage, DrawingUtils
 
-from classes import Box
+from modules.classes import Box
 
 def load_model_hf(repo_id, filename, ckpt_config_filename, device='cpu'):
     cache_config_file = hf_hub_download(repo_id=repo_id, filename=ckpt_config_filename)
@@ -124,7 +124,7 @@ class GSAMDetector:
                     'mask': mask,
                     'bbox': bbox,
                     # 'phrase': phrase,
-                    'score': logit
+                    'score': float(logit)
                 }
                 items.append(item)
         return items
@@ -135,17 +135,18 @@ class GSAMDetector:
             return
         contour = contours[0]
         bbox = item['bbox']
-        bbox_area = bbox[2] * bbox[3]
+        bbox_area = int((bbox[2] - bbox[0]) * (bbox[3] - bbox[1]))
         area = int(cv2.contourArea(contour))
         rotated_rect = cv2.minAreaRect(contour)
-        (center, (w, h), angle) = rotated_rect
+        (center, (w, l), angle) = rotated_rect
         angle = np.deg2rad(angle)
-        if w == 0 or h == 0:
+        w, l = int(w), int(l)
+        if w == 0 or l == 0:
             return
-        rotated_rect_area = int(w * h)
-        if w < h:
+        rotated_rect_area = int(w * l)
+        if w < l:
             angle -= np.pi / 2
-        w, h = min(w, h), max(w, h)
+        w, l = min(w, l), max(w, l)
         
         info = {
             'bbox_area': bbox_area,
@@ -154,7 +155,7 @@ class GSAMDetector:
             'rotated_rect': np.int0(cv2.boxPoints(rotated_rect)),
             'rotated_rect_area': rotated_rect_area,
             'width': w,
-            'height': h,
+            'length': l,
             'angle': angle
         }
         return info
@@ -178,8 +179,8 @@ class GSAMDetector:
                         item.score = 0
         return list(filter(lambda x: x.score, items))
 
-names_to_detect = ["liquid soap", "fish", "cup", "screwdriver", "cream", "book", "fork", "spoon"]
-
+# names_to_detect = ["liquid soap", "fish", "cup", "screwdriver", "cream", "book", "fork", "spoon"]
+names_to_detect = ["liquid soap", "fish", "cup", "cream", "book", "fork", "spoon", "block", "tape"]
 if __name__ == "__main__":
     ac.init_node("alpaca_gsam_example")
     detector = GSAMDetector()

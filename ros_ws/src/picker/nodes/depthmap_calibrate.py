@@ -9,6 +9,8 @@ from collections import namedtuple
 import seaborn as sns
 import pandas as pd
 import scipy.interpolate as interp
+import pcl
+from mpl_toolkits.mplot3d import Axes3D # <--- This is important for 3d plotting 
 
 point = namedtuple("point", ["x", "y", "depth"])
 from scipy.ndimage import morphology
@@ -73,7 +75,7 @@ def gaussian_filter(height_map):
     height_map = cv2.filter2D(height_map, -1, kernel)
     return height_map
 
-def generate_depth_gradient(points):
+def generate_depth_gradient_interp(points):
     # define the size of the grid
     width, height = 1920, 1080
     x, y = np.meshgrid(np.arange(width), np.arange(height))
@@ -94,8 +96,43 @@ def generate_depth_gradient(points):
         height_map = gaussian_filter(height_map)
     return height_map
 
+def generate_depth_map(points, depthmap):
+     # define the size of the grid
+    width, height = 1920, 1080
+    x, y = np.meshgrid(np.arange(width), np.arange(height))
+    # define some points with defined height values
+    points = [(p.x, p.y, p.depth) for p in points]
+    points = np.array(points, dtype=np.float32)
+    cloud = pcl.PointCloud()
+    cloud.from_array(points)
+    seg = cloud.make_segmenter_normals(ksearch=50)
+    seg.set_optimize_coefficients(True)
+    seg.set_model_type(pcl.SACMODEL_PLANE)
+    seg.set_normal_distance_weight(0.05)
+    seg.set_method_type(pcl.SAC_RANSAC)
+    seg.set_max_iterations(100)
+    seg.set_distance_threshold(0.005)
+    inliers, model = seg.segment()
+    # model is a tuple of 4 values (a, b, c, d) for the plane equation ax + by + cz + d = 0
+    a, b, c, d = model
+    # calculate the height map
+    height_map = (a * x + b * y + d) / -c
+    # visualize the height map in 3D
+    plt3d = plt.figure().gca(projection='3d')
+    plt3d.plot_surface(x, y, height_map, cmap='viridis')
+    # ax.plot_surface(x, y, height_map, cmap='viridis')
+    plt.show()
+    
+    # fill the NaN values outside of the defined area with linear interpolation
+    # is_outside = np.isnan(height_map)
+    # height_map[is_outside] = np.interp(np.flatnonzero(is_outside), np.flatnonzero(~is_outside), height_map[~is_outside])
+    # apply gaussian filter to smooth the height map
+    # for _ in range(10):
+    #     height_map = gaussian_filter(height_map)
+    return height_map
+    
 
-plain_offset = 5 # [mm]
+plain_offset = 2 # [mm]
 height_map_path = "/workspace/config/height_map.npy"
 if __name__ == "__main__":
     ac.init_node("alpaca_connector_realsense_example")
@@ -125,23 +162,24 @@ if __name__ == "__main__":
             # apply mask to depth image
             depth_masked = depth_map.copy()
             depth_masked[height_mask == 0] = 2000
-            depth_masked = normalize_depth(depth_masked, 900, np.max(height_map))
+            depth_masked = normalize_depth(depth_masked, 600, np.max(height_map))
             cv2.imshow("color", color_masked)
             cv2.imshow("depth", depth_masked)
             # normalize height map
-            height_map_norm = normalize_depth(height_map, 900, np.max(height_map))
+            height_map_norm = normalize_depth(height_map, 600, np.max(height_map))
             cv2.imshow("height_map", height_map_norm)
         else:
-            depth = normalize_depth(depth_map, 900, 1000)
+            depth = normalize_depth(depth_map, 600, 1000)
             cv2.imshow("color", color)
             cv2.imshow("depth", depth)
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
-        elif key == ord('s'):
+        if key == ord('s'):
             print(clicked_points)
-            height_map = generate_depth_gradient(clicked_points)
+            height_map = generate_depth_map(clicked_points, depth_map)
             # save height map as numpy array
             np.save(height_map_path, height_map)
+            # clicked_points = []
             # np.save("clicked_points.npy", clicked_points)
             # break
