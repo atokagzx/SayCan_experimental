@@ -5,10 +5,11 @@ import actionlib
 import threading
 import tf_conversions
 from alpaca_connector.ros_types import *
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Tuple, Union, Dict, Any, Iterable
 import numpy as np
 import cv2
 import time
+import pyrealsense2
 
 Pos3D = Tuple[float, float, float]
 
@@ -215,8 +216,8 @@ def gripper(state:bool):
         
 
 @_node_initialized
-def move_by_camera(points:List[Point6D]) -> MovePointsResult:
-    assert isinstance(points, list) or isinstance(points, tuple), "points must be a list or tuple"
+def move_by_camera(points:Iterable[Point6D]) -> MovePointsResult:
+    assert isinstance(points, Iterable), "points must be an iterable"
     assert all([isinstance(point, Point6D) for point in points]), "points must be a list or tuple of Point6D"
     assert len(points) > 0, "points must not be empty"
     goal = MovePointsGoal()
@@ -237,6 +238,7 @@ _depth_msg = None
 _new_msg = False
 _cv_bridge = CvBridge()
 _camera_info = None
+_image_header = None
 
 def _camera_init():
     global _color_buffer, _depth_buffer, _color_msg, _depth_msg, _new_msg, _cv_bridge, _camera_info
@@ -247,7 +249,7 @@ def _camera_init():
     
 
 def _rs_message_cb(msg, args):
-    global _color_buffer, _depth_buffer, _color_msg, _depth_msg, _new_msg, _cv_bridge
+    global _color_buffer, _depth_buffer, _color_msg, _depth_msg, _new_msg, _cv_bridge, _image_header
     timestamp = msg.header.stamp
     if args["type"] == "color":
         if not timestamp in _depth_buffer.keys():
@@ -267,6 +269,7 @@ def _rs_message_cb(msg, args):
     _new_msg = True
     _color_msg = _color_buffer[timestamp]
     _depth_msg = _depth_buffer[timestamp]
+    _image_header = _color_msg.header
 
 def _cam_info_cb(msg):
     # Save the camera intrinsic parameters
@@ -280,21 +283,27 @@ def _clear_buffer(max_len=10):
         _depth_buffer = {}
 
 @_node_initialized
-def pop_image() -> Tuple[np.ndarray, np.ndarray, CameraInfo]:
+def pop_image(add_header:bool = False) -> Tuple[np.ndarray, np.ndarray, CameraInfo]:
     '''Get color and depth image from realsense
+    :param add_header: if True, return image header
     :return: (color image, depth image)
     '''
-    global _new_msg, _color_msg, _depth_msg, _cv_bridge, _camera_info
+    global _new_msg, _color_msg, _depth_msg, _cv_bridge, _camera_info, _image_header
     if _camera_info is None:
         raise RuntimeError("Camera info is not ready")
     _new_msg = False
     color_image = _cv_bridge.imgmsg_to_cv2(_color_msg, desired_encoding="bgr8")
     depth_map = _cv_bridge.imgmsg_to_cv2(_depth_msg, desired_encoding="32FC1")
+    if add_header:
+        return color_image, depth_map, _camera_info, _image_header
     return color_image, depth_map, _camera_info
 
 @_node_initialized
-def wait_for_image(timeout=5) -> Tuple[np.ndarray, np.ndarray, CameraInfo]:
+def wait_for_image(timeout=5, add_header:bool = False) -> Tuple[np.ndarray, np.ndarray, CameraInfo]:
     '''Wait for the latest image to be ready
+    :param timeout: timeout in seconds
+    :param add_header: if True, return image header
+    :return: (color image, depth image)
     '''
     global _new_msg
     start_time = time.time()
@@ -302,7 +311,7 @@ def wait_for_image(timeout=5) -> Tuple[np.ndarray, np.ndarray, CameraInfo]:
         if time.time() - start_time > timeout and not timeout is None:
             raise RuntimeError("Timeout waiting for image")
         time.sleep(0.1)
-    return pop_image()
+    return pop_image(add_header)
 
 @_node_initialized
 def is_image_ready() -> bool:
@@ -327,19 +336,20 @@ def to_real_map(depth_map:np.ndarray, camera_info:CameraInfo=None) -> np.ndarray
     assert isinstance(camera_info, CameraInfo), "camera_info must be a CameraInfo"
     assert len(depth_map.shape) == 2, "depth_map must be a 2D array"
     assert depth_map.shape[0] == camera_info.height and depth_map.shape[1] == camera_info.width, "depth_map and camera_info must have the same size"
-    fx = camera_info.K[0]
-    fy = camera_info.K[4]
-    cx = camera_info.K[2]
-    cy = camera_info.K[5]
     depth_map = depth_map.astype(np.float32)
-    depth_map[depth_map == 0] = np.nan
-    x, y = np.meshgrid(np.arange(depth_map.shape[1]), np.arange(depth_map.shape[0]))
-    x = (x - cx) * depth_map / fx
-    y = (y - cy) * depth_map / fy
-    z = depth_map
-    return np.stack([x, y, z], axis=-1)
+    depth_map = depth_map / 1000.0
+    pos_map = np.zeros((depth_map.shape[0], depth_map.shape[1], 3), dtype=np.float32)
+    for v in range(depth_map.shape[0]):
+        for u in range(depth_map.shape[1]):
+            z = depth_map[v, u]
+            if z == 0:
+                continue
+            x = (u - camera_info.K[2]) * z / camera_info.K[0]
+            y = (v - camera_info.K[5]) * z / camera_info.K[4]
+            pos_map[v, u, :] = [x, y, z]
+    return pos_map
 
-def to_real_points(points:List, depth_map:np.ndarray, camera_info:CameraInfo=None) -> List[Point]:
+def to_real_points(points:Iterable, depth_map:np.ndarray, camera_info:CameraInfo=None) -> List[Point]:
     '''Convert a list of points to real world coordinates
     :param points: list of points
     :param depth_map: depth image
@@ -349,18 +359,25 @@ def to_real_points(points:List, depth_map:np.ndarray, camera_info:CameraInfo=Non
     global _camera_info
     if camera_info is None:
         camera_info = _camera_info
-    assert isinstance(points, list), "points must be a list"
+    assert isinstance(points, Iterable), "points must be an iterable"
     assert isinstance(depth_map, np.ndarray), "depth_map must be a numpy array"
     assert isinstance(camera_info, CameraInfo), "camera_info must be a CameraInfo"
     assert len(depth_map.shape) == 2, "depth_map must be a 2D array"
     assert depth_map.shape[0] == camera_info.height and depth_map.shape[1] == camera_info.width, "depth_map and camera_info must have the same size"
-    real_map = to_real_map(depth_map, camera_info)
     real_points = []
+    _intrinsics = pyrealsense2.intrinsics()
+    _intrinsics.width = camera_info.width
+    _intrinsics.height = camera_info.height
+    _intrinsics.ppx = camera_info.K[2]
+    _intrinsics.ppy = camera_info.K[5]
+    _intrinsics.fx = camera_info.K[0]
+    _intrinsics.fy = camera_info.K[4]
+    _intrinsics.model  = pyrealsense2.distortion.none
+    _intrinsics.coeffs = [i for i in camera_info.D]
+    depth_map = depth_map.astype(np.float32)
     for point in points:
         if point[0] < 0 or point[0] >= camera_info.width or point[1] < 0 or point[1] >= camera_info.height:
             raise ValueError(f"Point {point} is out of camera's view")
-        x = point[0]
-        y = point[1]
-        z = real_map[int(y), int(x), 2]
-        real_points.append((x, y, z))
+        point = pyrealsense2.rs2_deproject_pixel_to_point(_intrinsics, point,  depth_map[[point[1]], [point[0]]] / 1000)
+        real_points.append(point)
     return real_points

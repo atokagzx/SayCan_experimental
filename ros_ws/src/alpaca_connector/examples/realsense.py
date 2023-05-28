@@ -29,18 +29,22 @@ def mouse_callback(event, x, y, flags, param):
     if event == cv2.EVENT_MOUSEMOVE or event == cv2.EVENT_LBUTTONDOWN:
         # get real world coordinates
         xyz = ac.to_real_points([(x, y)], depth_map)
-        print(f"Mouse position: {x}, {y} | Depth: {depth_map[y, x]} | XYZ: {xyz}")
+        xyz_text = " ".join(f"{axis}: {value:.4f}" for axis, value in zip("XYZ", xyz[0]))
+        print(f"Mouse position: {x}, {y} | Depth: {depth_map[y, x]} | {xyz_text}")
 
 if __name__ == "__main__":
     ac.init_node("alpaca_connector_realsense_example")
     # add callback to imshow window mouse position
     
-    cv2.namedWindow("color")
+    cv2.namedWindow("color", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("color", 960, 540)
     cv2.setMouseCallback("color", mouse_callback)
-    cv2.namedWindow("depth")
+    cv2.namedWindow("depth", cv2.WINDOW_NORMAL)
+    cv2.resizeWindow("depth", 960, 540)
     cv2.setMouseCallback("depth", mouse_callback)
     while not ac.is_shutdown():
         color, depth_map, _camera_info = ac.wait_for_image()
+        # depth = normalize_depth(ac.to_real_map(depth_map)[:, :, 2]*1000, 900, 1000)
         depth = normalize_depth(depth_map, 900, 1000)
         cv2.imshow("color", color)
         cv2.imshow("depth", depth)
