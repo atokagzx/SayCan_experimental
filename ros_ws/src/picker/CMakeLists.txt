@@ -61,9 +61,10 @@ add_message_files(
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-# )
+add_service_files(
+  FILES
+  PickConfig.srv
+)
  
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -112,7 +113,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES uoais
-   CATKIN_DEPENDS rospy std_msgs message_runtime
+   CATKIN_DEPENDS rospy std_msgs message_runtime std_srvs
 #  DEPENDS system_lib
 )
 

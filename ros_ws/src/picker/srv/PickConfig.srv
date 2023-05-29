@@ -1,0 +1,10 @@
+Header header
+string object_name
+int64[2] pos # object position in the image to find it by thresholding
+---
+bool success # if success is false, the other fields are not set
+string reason # some info about the result
+geometry_msgs/Point object_position
+float64 object_orientation
+float64 object_width
+

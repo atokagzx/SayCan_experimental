@@ -69,29 +69,6 @@ class Picker:
         collision_mask[item_mask] = 0
         # draw gripper projection
         
-        
-
-
-
-
-def process_mask(mask):
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contour = contours[0]
-    rotated_rect = cv2.minAreaRect(contour)
-    rotated_rect_area = int(rotated_rect[1][0] * rotated_rect[1][1])
-    center = np.array(rotated_rect[0], dtype=np.int32)
-    area = int(cv2.contourArea(contour))
-    rotated_rect = np.int0(cv2.boxPoints(rotated_rect))
-    return rotated_rect, rotated_rect_area, center, area
-
-def draw_mask(mask, image, color:np.ndarray=None):
-    if color is None:
-        color = np.random.uniform(0, 1, size=3)
-    rgb_mask = np.array([mask.copy() for _ in range(3)])
-    colored_mask = np.concatenate(rgb_mask, axis=-1) * color
-    colored_mask = np.array(colored_mask, dtype=np.uint8)
-    image = cv2.addWeighted(image, 1, colored_mask, 1, 0)
-    return image
 
 def mouse_cb(event, x, y, flags, param):
     global items_detected
