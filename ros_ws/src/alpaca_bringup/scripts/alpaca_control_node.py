@@ -226,7 +226,7 @@ class CameraTFPublisher:
 
 if __name__ == "__main__":
     node = Node()
-    calibration_file_path = rospy.get_param("~calib_path")
+    # calibration_file_path = rospy.get_param("~calib_path")
     # tf_pub = CameraTFPublisher("/workspace/config/camera_pos.yaml")
     # tf_pub.run()
     node.run()

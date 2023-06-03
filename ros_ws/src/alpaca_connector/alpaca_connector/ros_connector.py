@@ -377,7 +377,7 @@ def to_real_points(points:Iterable, depth_map:np.ndarray, camera_info:CameraInfo
     depth_map = depth_map.astype(np.float32)
     for point in points:
         if point[0] < 0 or point[0] >= camera_info.width or point[1] < 0 or point[1] >= camera_info.height:
-            raise ValueError(f"Point {point} is out of camera's view")
+            raise ValueError(f"point {point} is out of camera's view")
         point = pyrealsense2.rs2_deproject_pixel_to_point(_intrinsics, point,  depth_map[[point[1]], [point[0]]] / 1000)
         real_points.append(point)
     return real_points
