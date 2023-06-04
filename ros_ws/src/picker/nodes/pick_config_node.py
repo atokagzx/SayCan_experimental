@@ -119,9 +119,9 @@ class PickerConfig:
         masked_color = self.color_image.copy()
         masked_color[footprint_mask == 255] = 0
         if self._debug_mode:
-            cv2.circle(masked_color, tuple(points_to_check_collision[lowest_point_index]), 10, (0, 0, 255), -1)
             global gripper_footprint_image
-            gripper_footprint_image = masked_color
+            gripper_footprint_image[footprint_mask == 255] = 0
+            cv2.circle(gripper_footprint_image, tuple(points_to_check_collision[lowest_point_index]), 10, (0, 0, 255), -1)
         return lowest_point
 
     def _check_pick_points(self, item, pick_config, on_plate=False):
@@ -133,6 +133,9 @@ class PickerConfig:
             return None
         body_collision = pick_config['top_height'] + self._gripper_height
         preferred_height = pick_config['mean_height'] + 0.012
+        if self._debug_mode:
+            global gripper_footprint_image
+            gripper_footprint_image = self.color_image.copy()
         for pick_point in pick_config['edge_points']:
             angle = pick_point['angle']
             points = pick_point['pos']
@@ -143,7 +146,7 @@ class PickerConfig:
                 continue
             # distance between pick point
             distance = np.linalg.norm(real_edge_points[0] - real_edge_points[1])
-            if distance > 0.10:
+            if distance > 0.12:
                 continue
             obstacles_height = self._get_fingers_collision(item, angle)
             if obstacles_height is None:
@@ -213,9 +216,9 @@ if __name__ == "__main__":
     data_subscriber = DataSubscriber()
     picker = PickerConfig(debug_mode=debug_mode)
     rospy.Service("/alpaca/get_pick_config", PickConfig, picker.pick_config_cb)
-    if debug_mode:
-        cv2.namedWindow("detected", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow("detected", 1280, 720)
+    # if debug_mode:
+    #     cv2.namedWindow("detected", cv2.WINDOW_NORMAL)
+    #     cv2.resizeWindow("detected", 1280, 720)
     # cv2.setMouseCallback("detected", picker.mouse_cb)
     while not rospy.is_shutdown():
         color, depth, boxes, circles, prompt, header, _camera_info = data_subscriber.wait_for_msg(waitkey=True)
@@ -225,13 +228,13 @@ if __name__ == "__main__":
                         camera_info=_camera_info,
                         boxes=boxes)
         if debug_mode:
-            masked = color.copy()
-            masked = DrawingUtils.draw_plates(masked, circles)
-            for box in boxes:
-                masked = DrawingUtils.draw_box_info(masked, box)
-            for i, name in enumerate(prompt):
-                cv2.putText(masked, name, (10, 40 + i * 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            cv2.imshow("detected", masked)
+            # masked = color.copy()
+            # masked = DrawingUtils.draw_plates(masked, circles)
+            # for box in boxes:
+            #     masked = DrawingUtils.draw_box_info(masked, box)
+            # for i, name in enumerate(prompt):
+            #     cv2.putText(masked, name, (10, 40 + i * 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            # cv2.imshow("detected", masked)
             if not gripper_footprint_image is None:
                 cv2.namedWindow("gripper_footprint", cv2.WINDOW_NORMAL)
                 cv2.resizeWindow("gripper_footprint", 1280, 720)
