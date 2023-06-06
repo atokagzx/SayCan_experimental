@@ -1,0 +1,8 @@
+[llama-7B-4b]
+    [llama-7B-4b.metadata]
+        owned_by    = 'Meta / ggerganov'
+        permission  = []
+        description = 'C++ implementation of LlaMA model, 7B parameters, 4-bit quantization'
+    [llama-7B-4b.network]
+        url = 'localhost:50051'
+        type = 'gRPC'
