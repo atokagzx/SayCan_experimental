@@ -1,0 +1,75 @@
+version: '3.9'
+
+services:
+  simpleai_server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../cache/llm://root/.cache
+      - ./scripts:/workspace
+    network_mode: "host"
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - NVIDIA_VISIBLE_DEVICES=all
+    entrypoint: 
+      - "simple_ai"
+      - "serve"
+      - "--port"
+      - "8080"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "10"
+    
+  llama_loader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../cache/llm://root/.cache
+      - ./scripts:/workspace
+    network_mode: "host"
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - NVIDIA_VISIBLE_DEVICES=all
+    entrypoint: 
+      - "python3.9"
+      - "get_models.py"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "10"
+        
+  llama_grpc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../cache/llm:/root/.cache
+      - ./scripts:/workspace
+    network_mode: "host"
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - NVIDIA_VISIBLE_DEVICES=all
+    entrypoint:
+      - "python3.9"
+      - "server.py"
+      - "--address"
+      - "[::]:50051"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "10"
