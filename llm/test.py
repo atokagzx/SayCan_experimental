@@ -74,8 +74,30 @@ pick and place("orange", "black storage box")
 pick and place("chips", "plastic storage box")
 pick and place("wooden block 2", "drawer")
 pick and place("apple", "black storage box")
-# Summary:
-'''
+# Summary:'''
+
+
+variants = ['robot.pick_and_place(blue block, blue block)',
+    'robot.pick_and_place(blue block, red block)',
+    'robot.pick_and_place(blue block, green block)',
+    'robot.pick_and_place(blue block, yellow block)',
+    'robot.pick_and_place(blue block, not yellow block)',
+    'robot.pick_and_place(blue block, blue bowl)',
+    'robot.pick_and_place(blue block, red bowl)',
+    'robot.pick_and_place(blue block, green bowl)',
+    'robot.pick_and_place(blue block, yellow bowl)',
+    'robot.pick_and_place(blue block, top left corner)',
+    'robot.pick_and_place(blue block, top right corner)',
+    'robot.pick_and_place(blue block, bottom left corner i am a human with eyes)',
+    "robot.pick_and_place(blue block, "]
+prompt = """To pick blue block and put it on yellow block, I should:\n"""
 print(f"prompt:\n{prompt}")
-completion = openai.Completion.create(model="llama-7B-4b", prompt=prompt, max_tokens=50, logprobs=1, echo=True)
-print(f"completion:\n{completion}")
+for var in variants:
+    new_prompt = prompt + "<|endofprompt|>" + var + "<|endofvariant|>"
+    # print(f"prompt:\n{prompt}")
+    completion = openai.Completion.create(model="llama-7B-4b", prompt=new_prompt, max_tokens=20, logprobs=1, echo=True)
+    # print(f"completion:\n{completion}")
+    logprobs = completion.choices[0].logprobs['token_logprobs']
+    # print(f"logprobs:\n{logprobs}")
+    logprobs = list(map(float, logprobs))
+    print(f"{var}: {sum(logprobs)/len(logprobs)}, {len(logprobs)}")

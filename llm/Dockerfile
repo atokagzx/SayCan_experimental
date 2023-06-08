@@ -100,9 +100,9 @@ RUN python${PY_VERSION} -m pip install --upgrade datasets \
                                                 loralib \
                                                 sentencepiece \
                                                 git+https://github.com/zphang/transformers@c3dc391 \
-                                                git+https://github.com/huggingface/peft.git \
-                                                simple_ai_server
+                                                git+https://github.com/huggingface/peft.git
+                                                # simple_ai_server
 
-RUN python${PY_VERSION} -m pip install git+https://github.com/lhenault/simpleAI 
+RUN python${PY_VERSION} -m pip install  git+https://github.com/atokagzx/simpleAI_fixed_response.git
 WORKDIR /workspace
 ENTRYPOINT python${PY_VERSION} -m simple_ai serve --port 8080
