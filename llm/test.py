@@ -95,7 +95,7 @@ print(f"prompt:\n{prompt}")
 for var in variants:
     new_prompt = prompt + "<|endofprompt|>" + var + "<|endofvariant|>"
     # print(f"prompt:\n{prompt}")
-    completion = openai.Completion.create(model="llama-7B-4b", prompt=new_prompt, max_tokens=20, logprobs=1, echo=True)
+    completion = openai.Completion.create(model="llama-7B-4b", prompt=new_prompt, max_tokens=20, logprobs=True, echo=True)
     # print(f"completion:\n{completion}")
     logprobs = completion.choices[0].logprobs['token_logprobs']
     # print(f"logprobs:\n{logprobs}")

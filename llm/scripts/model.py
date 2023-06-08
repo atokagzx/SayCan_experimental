@@ -46,6 +46,7 @@ class AlpacaModel(LanguageModel):
         logits_processor = None,
         prefix_allowed_tokens_fn = None,
         existed_tokens = None,
+        logprobs = False,
         **kwargs,
     ):
         '''This is a copy of the generate function from transformers.generation_utils.GenerationMixin'''
@@ -87,6 +88,7 @@ class AlpacaModel(LanguageModel):
                 input_ids,
                 logits_processor=logits_processor,
                 existed_tokens = existed_tokens,
+                logprobs = logprobs,
                 **model_kwargs,
             )
         
@@ -94,6 +96,7 @@ class AlpacaModel(LanguageModel):
         input_ids: torch.LongTensor,
         logits_processor = None,
         existed_tokens: Optional[torch.LongTensor] = None,
+        logprobs = False,
         **model_kwargs,
     ):
         logits_processor = logits_processor if logits_processor is not None else LogitsProcessorList()
@@ -120,10 +123,11 @@ class AlpacaModel(LanguageModel):
             # get existed_token's score and replace next_token with existed_token
             existed_token_reshaped = existed_token.repeat(next_tokens.shape[0])
             existed_token_score = next_tokens_scores[0][existed_token_reshaped]
-            # variant_token_scores.append(float(existed_token_score.cpu().numpy()[0]))
-            tokens.append(self.tokenizer.decode(existed_token.cpu().numpy()))
-            token_logprobs.append(float(existed_token_score.cpu().numpy()[0]))
             next_tokens = existed_token_reshaped
+
+            if logprobs:
+                tokens.append(self.tokenizer.decode(existed_token.cpu().numpy()))
+                token_logprobs.append(float(existed_token_score.cpu().numpy()[0]))
             
             # update generated ids, model inputs, and length for next step
             input_ids = torch.cat([input_ids, next_tokens[:, None]], dim=-1)
@@ -172,14 +176,15 @@ class AlpacaModel(LanguageModel):
 
         
         variant = variants[0]
-        if echo and logprobs:
-            existed_tokens = self.tokenizer(variant, return_tensors="pt")["input_ids"].cuda()
+        existed_tokens = self.tokenizer(variant, return_tensors="pt")["input_ids"].cuda()
+        if echo:
             ids, tokens, token_logprobs = self.generate(input_ids=input_ids,
                 generation_config=generation_config,
                 return_dict_in_generate=True,
                 output_scores=True,
                 max_new_tokens=max_tokens,
                 existed_tokens=existed_tokens,
+                logprobs=logprobs
             )
 
         # # TODO: add completion
