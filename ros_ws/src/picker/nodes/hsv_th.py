@@ -16,9 +16,11 @@ def get_sliders():
 
 if __name__ == "__main__":
     ac.init_node("alpaca_segmentation_example")
+    cv2.namedWindow("color", cv2.WINDOW_NORMAL)
     cv2.namedWindow("hsv", cv2.WINDOW_NORMAL)
     # resize the window
-    cv2.resizeWindow("hsv", 1920, 1080)
+    cv2.resizeWindow("color", 960, 540)
+    cv2.resizeWindow("hsv", 960, 540)
     # add hsv sliders
     cv2.createTrackbar("h_min", "hsv", 0, 179, lambda x: None)
     cv2.createTrackbar("s_min", "hsv", 0, 255, lambda x: None)
