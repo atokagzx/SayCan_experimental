@@ -174,35 +174,34 @@ class AlpacaModel(LanguageModel):
         input_ids = inputs["input_ids"]
         input_ids = input_ids.cuda()
 
-        
-        variant = variants[0]
-        existed_tokens = self.tokenizer(variant, return_tensors="pt")["input_ids"].cuda()
-        if echo:
-            ids, tokens, token_logprobs = self.generate(input_ids=input_ids,
-                generation_config=generation_config,
-                return_dict_in_generate=True,
-                output_scores=True,
-                max_new_tokens=max_tokens,
-                existed_tokens=existed_tokens,
-                logprobs=logprobs
-            )
+        response = []
+        for variant in variants:
+            existed_tokens = self.tokenizer(variant, return_tensors="pt")["input_ids"].cuda()
+            if echo:
+                ids, tokens, token_logprobs = self.generate(input_ids=input_ids,
+                    generation_config=generation_config,
+                    return_dict_in_generate=True,
+                    output_scores=True,
+                    max_new_tokens=max_tokens,
+                    existed_tokens=existed_tokens,
+                    logprobs=logprobs
+                )
 
-        # # TODO: add completion
-        # if max_tokens > 0:
-        #     output = self.model.generate(
-        #         input_ids=input_ids,
-        #         generation_config=generation_config,
-        #         return_dict_in_generate=True,
-        #         output_scores=True,
-        #         max_new_tokens=max_tokens,
-        #     )
-        results = []
-        # for sequence in output.sequences:
-        #     results.append(self.tokenizer.decode(sequence).strip())
-        for idss in ids:
-            results.append(self.tokenizer.decode(idss).strip())
-        generated_logprobs = {"tokens": tokens,
-                    "token_logprobs": token_logprobs} if logprobs else None
-        return json.dumps({"text": results[0], 
-                           "logprobs": generated_logprobs,
+            # # TODO: add completion
+            # if max_tokens > 0:
+            #     output = self.model.generate(
+            #         input_ids=input_ids,
+            #         generation_config=generation_config,
+            #         return_dict_in_generate=True,
+            #         output_scores=True,
+            #         max_new_tokens=max_tokens,
+            #     )
+            # for sequence in output.sequences:
+            #     results.append(self.tokenizer.decode(sequence).strip())
+            generated_logprobs = {"tokens": tokens,
+                        "token_logprobs": token_logprobs} if logprobs else None
+            
+            response.append({"text": self.tokenizer.decode(ids[0]).strip(), 
+                            "logprobs": generated_logprobs,
                             "finish_reason": ""})
+        return json.dumps(response, ensure_ascii=False)

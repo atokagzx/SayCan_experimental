@@ -1,6 +1,7 @@
 ros_ws/devel
 ros_ws/build
 /ros_ws/src/CMakeLists.txt
+ros_ws/src/cap
 /config
 .catkin_workspace
 __pycache__

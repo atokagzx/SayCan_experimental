@@ -103,6 +103,6 @@ RUN python${PY_VERSION} -m pip install --upgrade datasets \
                                                 git+https://github.com/huggingface/peft.git
                                                 # simple_ai_server
 
-RUN python${PY_VERSION} -m pip install  git+https://github.com/atokagzx/simpleAI_fixed_response.git
+RUN python${PY_VERSION} -m pip  install git+https://github.com/atokagzx/simpleAI_fixed_response.git
 WORKDIR /workspace
 ENTRYPOINT python${PY_VERSION} -m simple_ai serve --port 8080

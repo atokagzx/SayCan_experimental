@@ -12,6 +12,8 @@ docker run -ti --rm \
       -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
       -e XAUTHORITY \
       -e OPENAI_KEY=$OPENAI_KEY \
+      -e ROS_MASTER_URI=$ROS_MASTER_URI \
+      -e ROS_IP=$ROS_IP \
       -v $ROOT_DIR:/workspace \
       -v $ROOT_DIR/cache:/root/.cache \
       --net=host \

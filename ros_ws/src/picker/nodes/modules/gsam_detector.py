@@ -44,8 +44,8 @@ class GSAMDetector:
                 gd_ckpt_filenmae = "groundingdino_swinb_cogcoor.pth",
                 gd_ckpt_config_filename = "GroundingDINO_SwinB.cfg.py",
                 sam_checkpoint="/workspace/weights/sam_vit_h_4b8939.pth",
-                text_threshold = 0.25,
-                box_threshold = 0.3
+                text_threshold = 0.15,
+                box_threshold = 0.15
                 ):
         self._device = device
         self._load_models(gd_ckpt_repo_id, gd_ckpt_filenmae, gd_ckpt_config_filename, sam_checkpoint)
@@ -85,6 +85,10 @@ class GSAMDetector:
                 colored_name = name
                 if check_color:
                     colored_name = self._get_color(item["mask"], hsv_masks, colored_name)
+                if item_info["area"] > 100000:
+                    continue
+                if item_info["area"] < 2000:
+                    continue
                 item_obj = Box(name=colored_name, **item_info, **item, additional_names=[])
                 items_list.append(item_obj)
         return items_list
