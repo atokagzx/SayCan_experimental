@@ -18,6 +18,7 @@ from groundingdino.util.inference import predict as gd_predict
 import torch
 from huggingface_hub import hf_hub_download
 from rospy import loginfo, logerr, logwarn
+from modules.hsv_range import hsv_ranges
 
 from modules.utils import CroppedImage, DrawingUtils
 
@@ -43,8 +44,8 @@ class GSAMDetector:
                 gd_ckpt_filenmae = "groundingdino_swinb_cogcoor.pth",
                 gd_ckpt_config_filename = "GroundingDINO_SwinB.cfg.py",
                 sam_checkpoint="/workspace/weights/sam_vit_h_4b8939.pth",
-                text_threshold = 0.25,
-                box_threshold = 0.3
+                text_threshold = 0.15,
+                box_threshold = 0.15
                 ):
         self._device = device
         self._load_models(gd_ckpt_repo_id, gd_ckpt_filenmae, gd_ckpt_config_filename, sam_checkpoint)
@@ -67,16 +68,48 @@ class GSAMDetector:
         @return: list of Box objects
         """
         items_list = []
+        check_color = any(["|color|" in name for name in names])
+        if check_color:
+            hsv_masks = self._get_hsv_thresholded_masks(image, hsv_ranges)
+
         for name in names:
-            boxes, phrases, logits = self._gdino_detect(image, name)
+            name_to_detect = name
+            if "|color|" in name:
+                name_to_detect.replace("|color|", "")
+            boxes, phrases, logits = self._gdino_detect(image, name_to_detect)
             items_dicts = self._segment(image, boxes, phrases, logits)
             for item in items_dicts:
                 item_info = self._process_mask(item)
                 if item_info is None:
                     continue
-                item_obj = Box(name=name, **item_info, **item, additional_names=[])
+                colored_name = name
+                if check_color:
+                    colored_name = self._get_color(item["mask"], hsv_masks, colored_name)
+                if item_info["area"] > 100000:
+                    continue
+                if item_info["area"] < 2000:
+                    continue
+                item_obj = Box(name=colored_name, **item_info, **item, additional_names=[])
                 items_list.append(item_obj)
         return items_list
+    
+    def _get_hsv_thresholded_masks(self, image, hsv_ranges):
+        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        masks = {}
+        for color_name, hsv_range in hsv_ranges.items():
+            hsv_mask = cv2.inRange(hsv_image, hsv_range[0], hsv_range[1])
+            hsv_mask = hsv_mask.reshape(hsv_mask.shape + (1,))
+            masks[color_name] = hsv_mask
+        return masks
+
+    def _get_color(self, mask, hsv_masks, name):
+        if "|color|" not in name:
+            return name
+        color_scores = {}
+        for color_name, hsv_mask in hsv_masks.items():
+            color_scores[color_name] = np.sum(np.logical_and(mask, hsv_mask))
+        color = max(color_scores, key=color_scores.get)
+        return name.replace("|color|", color)
     
     def _gdino_detect(self, image, name):
         transform = T.Compose(
@@ -159,8 +192,6 @@ class GSAMDetector:
             'angle': angle
         }
         return info
-    
-    
     
     @staticmethod
     def filter_same_items(items: List[Box], dst_threshold: int = 150):

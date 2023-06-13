@@ -30,14 +30,16 @@ class PickerConfig:
         self.camera_info = None
         self._image_header = None
         self.boxes = []
+        self.circles = []
         self._debug_mode = debug_mode
 
-    def set_data(self, color_image, depth, header, camera_info, boxes):
+    def set_data(self, color_image, depth, header, camera_info, boxes, circles):
         self.color_image = color_image
         self.depth_image = depth
         self._image_header = header
         self.camera_info = camera_info
         self.boxes = boxes
+        self.circles = circles
 
     def _get_pick_config(self, item):
         assert self.color_image is not None and self.depth_image is not None and self.camera_info is not None
@@ -161,6 +163,67 @@ class PickerConfig:
         else:
             return None
         
+    def _get_pick_config_circle(self, item):
+        assert self.color_image is not None and self.depth_image is not None and self.camera_info is not None
+        center = item.pos
+        point = center.astype(np.int32)
+        try:
+            real_point = np.array(ac.to_real_points([point], self.depth_image, self.camera_info), dtype=np.float32)[0]
+        except ValueError as e:
+            rospy.logerr(f"error in to_real_points: {e}")
+            return  {
+                "pick_points": [],
+                "mean_height": 0,
+                "top_height": 0,
+            }
+        return real_point
+        
+
+    def pick_config_circle_cb(self, req):
+        header = req.header
+        # wait for new image
+        time = rospy.Time.now()
+        while True:
+            if rospy.Time.now() - time > rospy.Duration(5):
+                return PickConfigResponse(
+                    success=False,
+                    reason=f'timeout waiting for new image: last image time: {self._image_header.stamp}, looking for: {header.stamp}'
+                )
+            if self._image_header is None:
+                sleep(0.1)
+            else:
+                if self._image_header.stamp >= header.stamp:
+                    break
+                else:
+                    sleep(0.1)
+        name = req.object_name
+        pos_on_image = req.pos
+        filtered_items = (item for item in self.circles if item.name == name)
+        sorted_items = sorted(filtered_items, key=lambda item: np.linalg.norm(item.pos - np.array(pos_on_image)))
+        if len(sorted_items) == 0:
+            return PickConfigResponse(
+                success=False,
+                reason=f'item "{name}" not found'
+            )
+        item = sorted_items[0]
+        distance = np.linalg.norm(item.pos - np.array(pos_on_image))
+        if distance > 50:
+            return PickConfigResponse(
+                success=False,
+                reason=f'item "{name}" position is too far from the selected point: "{pos_on_image}"/"{item.pos} distance: "{distance}"'
+            )
+        
+        point = self._get_pick_config_circle(item)
+        angle = 0
+        width = 0
+        return PickConfigResponse(
+            success=True,
+            object_position=Point(*point),
+            object_orientation=angle,
+            object_width=width
+        )
+
+        
     def pick_config_cb(self, req):
         header = req.header
         # wait for new image
@@ -216,6 +279,7 @@ if __name__ == "__main__":
     data_subscriber = DataSubscriber()
     picker = PickerConfig(debug_mode=debug_mode)
     rospy.Service("/alpaca/get_pick_config", PickConfig, picker.pick_config_cb)
+    rospy.Service("/alpaca/get_pick_config_circle", PickConfig, picker.pick_config_circle_cb)
     # if debug_mode:
     #     cv2.namedWindow("detected", cv2.WINDOW_NORMAL)
     #     cv2.resizeWindow("detected", 1280, 720)
@@ -226,7 +290,8 @@ if __name__ == "__main__":
                         depth=depth, 
                         header=header,
                         camera_info=_camera_info,
-                        boxes=boxes)
+                        boxes=boxes,
+                        circles=circles)
         if debug_mode:
             # masked = color.copy()
             # masked = DrawingUtils.draw_plates(masked, circles)
