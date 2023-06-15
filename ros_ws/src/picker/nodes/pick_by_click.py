@@ -18,7 +18,7 @@ from picker.srv import PickConfig, PickConfigResponse, PickConfigRequest
 from modules.ros_utils import DataSubscriber
 
 class ClickProcessor:
-    srv_name = "/alpaca/get_pick_config"
+    srv_name = "/alpaca/get_pick_config_box"
     def __init__(self):
         self._pick_thread = None
         self.color_image = None

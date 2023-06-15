@@ -1,0 +1,10 @@
+Header header
+string pick_object_name
+string pick_object_type
+int64[2] pick_object_pos # object position in the image to find it by thresholding
+string place_object_name
+string place_object_type
+int64[2] place_object_pos # object position in the image to find it by thresholding
+---
+bool success # if success is false, the other fields are not set
+string reason # some info about the result

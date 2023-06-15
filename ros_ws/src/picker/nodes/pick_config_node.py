@@ -278,7 +278,7 @@ if __name__ == "__main__":
     debug_mode = rospy.get_param("~debug", False)
     data_subscriber = DataSubscriber()
     picker = PickerConfig(debug_mode=debug_mode)
-    rospy.Service("/alpaca/get_pick_config", PickConfig, picker.pick_config_cb)
+    rospy.Service("/alpaca/get_pick_config_box", PickConfig, picker.pick_config_cb)
     rospy.Service("/alpaca/get_pick_config_circle", PickConfig, picker.pick_config_circle_cb)
     # if debug_mode:
     #     cv2.namedWindow("detected", cv2.WINDOW_NORMAL)

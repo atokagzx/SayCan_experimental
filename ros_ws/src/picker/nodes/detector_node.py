@@ -40,12 +40,35 @@ def publish_detected_boxes(items, header, prompt):
             rotated_rect=item.rotated_rect.flatten().tolist(),
             rotated_rect_area=item.rotated_rect_area
         ))
+    boxes_no_mask_list = []
+    for box in boxes_list:
+        boxes_no_mask_list.append(Box(
+            name=box.name,
+            score=box.score,
+            pos=box.pos,
+            area=box.area,
+            additional_names=box.additional_names,
+            bbox=box.bbox,
+            bbox_area=box.bbox_area,
+            angle=box.angle,
+            width=box.width,
+            length=box.length,
+            rotated_rect=box.rotated_rect,
+            rotated_rect_area=box.rotated_rect_area
+        ))
     boxes_publisher.publish(BoxArray(header=rospy.Header(
                                             stamp=header.stamp,
                                             frame_id="gsam_node",
                                         ), 
                                     prompt=prompt,
                                     boxes=boxes_list))
+    boxes_no_mask_publisher.publish(BoxArray(header=rospy.Header(
+                                            stamp=header.stamp,
+                                            frame_id="gsam_node",
+                                        ),
+                                    prompt=prompt,
+                                    boxes=boxes_no_mask_list))
+    
 
 def publish_detected_circles(items, header):
     global image_bridge, circles_publisher
@@ -61,11 +84,27 @@ def publish_detected_circles(items, header):
             additional_names=item.additional_names,
             radius=item.radius
         ))
+    circles_no_mask_list = []
+    for circle in circles_list:
+        circles_no_mask_list.append(Circle(
+            name=circle.name,
+            score=circle.score,
+            pos=circle.pos,
+            area=circle.area,
+            additional_names=circle.additional_names,
+            radius=circle.radius
+        ))
     circles_publisher.publish(CircleArray(header=rospy.Header(
                                             stamp=header.stamp,
                                             frame_id="gsam_node",
                                         ), 
                                     circles=circles_list))
+    circles_no_mask_publisher.publish(CircleArray(header=rospy.Header(
+                                            stamp=header.stamp, 
+                                            frame_id="gsam_node",
+                                        ),
+                                    circles=circles_no_mask_list))
+    
 def publish_images(color, depth_map, _camera_info, header):
     global image_bridge, color_publisher, depth_publisher, camera_info_publisher
     image_depth = image_bridge.cv2_to_imgmsg(depth_map, encoding="passthrough")
@@ -129,6 +168,8 @@ if __name__ == "__main__":
     rospy.Subscriber("/alpaca/names_to_detect", Prompt, set_names_to_detect)
     boxes_publisher = rospy.Publisher("/alpaca/detector/boxes", BoxArray, queue_size=1, latch=False)
     circles_publisher = rospy.Publisher("/alpaca/detector/circles", CircleArray, queue_size=1, latch=False)
+    boxes_no_mask_publisher = rospy.Publisher("/alpaca/detector/boxes_no_mask", BoxArray, queue_size=1, latch=False)
+    circles_no_mask_publisher = rospy.Publisher("/alpaca/detector/circles_no_mask", CircleArray, queue_size=1, latch=False)
     color_publisher = rospy.Publisher("/alpaca/detector/camera/color", Image, queue_size=1, latch=False)
     depth_publisher = rospy.Publisher("/alpaca/detector/camera/aligned_depth", Image, queue_size=1, latch=False)
     camera_info_publisher = rospy.Publisher("/alpaca/detector/camera/camera_info", CameraInfo, queue_size=1, latch=False)
