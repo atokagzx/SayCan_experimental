@@ -136,6 +136,32 @@ def publish_images(color, depth_map, _camera_info, header):
         roi=_camera_info.roi
     ))
 
+def filter_outer_boxes(boxes, bounds=((350, 20),
+                                        (1600, 20),
+                                        (1600, 850),
+                                        (350, 850))):
+    if len(boxes) == 0:
+        return boxes
+    mask = np.zeros((boxes[0].mask.shape[0], boxes[0].mask.shape[1]), dtype=np.uint8)
+    # draw the outer bounds as trapazoid
+    cv2.fillPoly(mask, np.array([bounds], dtype=np.int32), 255)
+    mask = cv2.bitwise_not(mask)
+    for box in boxes:
+        intersection = cv2.bitwise_and(box.mask, box.mask, mask=mask)
+        if np.sum(intersection) > 0:
+            box.score = 0
+    filtered_boxes = list(filter(lambda box: box.score > 0, boxes))
+    return filtered_boxes
+
+def filter_out_low_score_fish(boxes, threshold=0.4):
+    """Filter out boxes that are below the threshold
+    @param boxes: list of boxes
+    @param threshold: threshold to filter out boxes
+    @return: list of boxes that are above the threshold
+    """
+    filtered_boxes = list(filter(lambda box: box.score > threshold or box.name != "fish", boxes))
+    return filtered_boxes
+
 def filter_plates_from_boxes(boxes, plates):
     """Filter out boxes that are already detected as plates
     @param boxes: list of boxes
@@ -149,6 +175,19 @@ def filter_plates_from_boxes(boxes, plates):
                     box.score = 0
     filtered_boxes = list(filter(lambda box: box.score > 0, boxes))
     return filtered_boxes
+
+def compose_blocks(boxes):
+    sinonim_names = {
+        "fish": [],
+        "block": ["square", "rectangle", "cube", "box", "small block"],
+    }
+    for box in boxes:
+        for original_name, sinonim_list in sinonim_names.items():
+            for sinonim in sinonim_list:
+                if sinonim in box.name:
+                    # replace the name with the original name
+                    box.name = box.name.replace(sinonim, original_name)
+    return boxes
 
 if __name__ == "__main__":
     ac.init_node("gsam_node")
@@ -185,6 +224,9 @@ if __name__ == "__main__":
                 circles = plate_detector.detect(color)
                 boxes = filter_plates_from_boxes(boxes, circles)
                 boxes = GSAMDetector.filter_same_items(boxes)
+                boxes = compose_blocks(boxes)
+                boxes = filter_out_low_score_fish(boxes)
+                boxes = filter_outer_boxes(boxes)
                 publish_detected_boxes(boxes, header, detecting_names)
                 publish_detected_circles(circles, header)
                 publish_images(color, depth_map, _camera_info, header)

@@ -31,6 +31,7 @@ def set_gripper_wrapper(state: bool):
 class PickPlaceSkill:
     pick_box_srv_name = "/alpaca/get_pick_config_box"
     pick_circle_srv_name = "/alpaca/get_pick_config_circle"
+    place_config_srv_name = "/alpaca/get_place_config"
     def __init__(self):
         self._boxes = None
         self._circles = None
@@ -38,6 +39,7 @@ class PickPlaceSkill:
             rospy.wait_for_service(service, timeout=5)
         self._pick_box_config_srv = rospy.ServiceProxy(self.pick_box_srv_name, PickConfig)
         self._pick_circle_config_srv = rospy.ServiceProxy(self.pick_circle_srv_name, PickConfig)
+        self._place_config_srv = rospy.ServiceProxy(self.place_config_srv_name, PickConfig)  
         # advertise service
         self._pick_srv = rospy.Service("/alpaca/pick_place", PickPlace, self._pick_place_cb)
         
@@ -71,7 +73,7 @@ class PickPlaceSkill:
         place_position = [place_position.x, place_position.y, place_position.z]
         pick_orientation = pick_config.object_orientation
         place_orientation = place_config.object_orientation
-        place_position[2] -= 0.06
+        # place_position[2] -= 0.06
 
         try:
             # open gripper
@@ -83,8 +85,8 @@ class PickPlaceSkill:
             # close gripper
             set_gripper_wrapper(True)            
             move_gripper_wrapper([ac.Point6D(pick_position[0], pick_position[1], pick_position[2] - 0.2, np.pi, 0, pick_orientation),
-                                ac.Point6D(place_position[0], place_position[1], place_position[2] - 0.2, np.pi, 0, place_orientation),
-                                ac.Point6D(place_position[0], place_position[1], place_position[2] - 0.000, np.pi, 0, place_orientation)])
+                                ac.Point6D(place_position[0], place_position[1], place_position[2] - 0.25, np.pi, 0, place_orientation),
+                                ac.Point6D(place_position[0], place_position[1], place_position[2] - 0.025, np.pi, 0, place_orientation)])
             # open gripper
             set_gripper_wrapper(False)
             # move to start position
@@ -101,17 +103,22 @@ class PickPlaceSkill:
         for config_name, req in zip(["pick", "place"], [pick_req, place_req]):
             timer = rospy.Rate(0.5)
             srv = None
-            if req["object_type"].lower() == "box":
+            # for pick we use pick_box_config_srv or pick_circle_config_srv, for place we use place_config_srv for both
+            if config_name == "place":
+                srv = self._place_config_srv
+            elif req["object_type"].lower() == "box":
                 srv = self._pick_box_config_srv
             elif req["object_type"].lower() == "circle":
                 srv = self._pick_circle_config_srv
             else:
                 raise Exception(f"Unknown object type {req['object_type']}")
+            # create request, passing object name and it's position in pixel coordinates
             request = PickConfigRequest(
                     header=rospy.Header(),
                     object_name=req["object_name"],
                     pos=req["object_pos"],
                 )
+            # try to get pick/place config 5 times with 0.5s delay between attempts if it fails
             for attempt in range(5):
                 if attempt > 0:
                     rospy.loginfo(f"retrying {attempt + 1}...")

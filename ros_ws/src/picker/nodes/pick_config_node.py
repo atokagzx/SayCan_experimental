@@ -17,6 +17,16 @@ from geometry_msgs.msg import Point
 
 gripper_footprint_image = None
 
+def data_exists_wrapper(func):
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        assert isinstance(self, PickerConfig), "data_exists_wrapper should be used only with PickerConfig class"
+        if self.color_image is None or self.depth_image is None or self.camera_info is None:
+            rospy.logerr("data not set")
+            return False, PickConfigResponse()
+        return func(*args, **kwargs)
+    return wrapper
+
 class PickerConfig:
     def __init__(self, debug_mode=False):
         # self._height_map = np.load(height_map_path)
@@ -41,8 +51,9 @@ class PickerConfig:
         self.boxes = boxes
         self.circles = circles
 
+    @data_exists_wrapper
     def _get_pick_config(self, item):
-        assert self.color_image is not None and self.depth_image is not None and self.camera_info is not None
+        # assert self.color_image is not None and self.depth_image is not None and self.camera_info is not None
         mask = item.mask
         points = np.argwhere(mask)[:,:2] # [y, x]
         points = points[:, ::-1] # [x, y]
@@ -163,8 +174,9 @@ class PickerConfig:
         else:
             return None
         
+    @data_exists_wrapper
     def _get_pick_config_circle(self, item):
-        assert self.color_image is not None and self.depth_image is not None and self.camera_info is not None
+        # assert self.color_image is not None and self.depth_image is not None and self.camera_info is not None
         center = item.pos
         point = center.astype(np.int32)
         try:
@@ -177,7 +189,26 @@ class PickerConfig:
                 "top_height": 0,
             }
         return real_point
-        
+    
+    @data_exists_wrapper
+    def _get_place_config(self, item):
+        # assert self.color_image is not None and self.depth_image is not None and self.camera_info is not None
+        center = item.pos
+        footprint_mask = np.zeros([self.color_image.shape[0], self.color_image.shape[1]], dtype=np.uint8)
+        footprint_mask = cv2.circle(footprint_mask, tuple(center.astype(np.int32)), int(self._gripper_footprint_length/2), 255, -1)
+        cv2.imwrite("/workspace/footprint_mask.png", footprint_mask)
+        footprint_points = np.argwhere(footprint_mask)[:,:2] # [y, x]
+        footprint_points = footprint_points[:, ::-1] # [x, y]
+        footprint_points = footprint_points.astype(np.int32)
+        real_points = np.asarray(ac.to_real_points(footprint_points, self.depth_image, self.camera_info))
+        real_points = real_points[real_points[:, 2] != 0]
+        if len(real_points) == 0:
+            return None
+        # find max height
+        max_height = np.min(real_points[:, 2])
+        real_point_center = np.array(ac.to_real_points([center], self.depth_image, self.camera_info), dtype=np.float32)[0]
+        place_pose = np.array([real_point_center[0], real_point_center[1], max_height])
+        return place_pose
 
     def pick_config_circle_cb(self, req):
         header = req.header
@@ -273,6 +304,57 @@ class PickerConfig:
             object_width=width
         )
 
+    def place_config_cb(self, req):
+        header = req.header
+        # wait for new image
+        time = rospy.Time.now()
+        while True:
+            if rospy.Time.now() - time > rospy.Duration(5):
+                return PickConfigResponse(
+                    success=False,
+                    reason=f'timeout waiting for new image: last image time: {self._image_header.stamp}, looking for: {header.stamp}'
+                )
+            if self._image_header is None:
+                sleep(0.1)
+            else:
+                if self._image_header.stamp >= header.stamp:
+                    break
+                else:
+                    sleep(0.1)
+        name = req.object_name
+        pos_on_image = req.pos
+        items_to_place = []
+        items_to_place.extend(self.boxes)
+        items_to_place.extend(self.circles)
+        filtered_items = (item for item in items_to_place if item.name == name)
+        sorted_items = sorted(filtered_items, key=lambda item: np.linalg.norm(item.pos - np.array(pos_on_image)))
+        if len(sorted_items) == 0:
+            return PickConfigResponse(
+                success=False,
+                reason=f'item "{name}" not found'
+            )
+        item = sorted_items[0]
+        distance = np.linalg.norm(item.pos - np.array(pos_on_image))
+        if distance > 50:
+            return PickConfigResponse(
+                success=False,
+                reason=f'item "{name}" position is too far from the selected point: "{pos_on_image}"/"{item.pos} distance: "{distance}"'
+            )
+        object_position = self._get_place_config(item)
+        if object_position is None:
+            return PickConfigResponse(
+                success=False,
+                reason=f'item "{name}" cannot be placed'
+            )
+        object_orientation = item.angle if isinstance(item, Box) else 0
+        object_orientation = -object_orientation + np.pi/2
+        return PickConfigResponse(
+            success=True,
+            object_position=Point(*object_position),
+            object_orientation=object_orientation,
+            object_width=0
+        )
+
 if __name__ == "__main__":
     rospy.init_node("pick_config_node")
     debug_mode = rospy.get_param("~debug", False)
@@ -280,6 +362,7 @@ if __name__ == "__main__":
     picker = PickerConfig(debug_mode=debug_mode)
     rospy.Service("/alpaca/get_pick_config_box", PickConfig, picker.pick_config_cb)
     rospy.Service("/alpaca/get_pick_config_circle", PickConfig, picker.pick_config_circle_cb)
+    rospy.Service("/alpaca/get_place_config", PickConfig, picker.place_config_cb)
     # if debug_mode:
     #     cv2.namedWindow("detected", cv2.WINDOW_NORMAL)
     #     cv2.resizeWindow("detected", 1280, 720)
