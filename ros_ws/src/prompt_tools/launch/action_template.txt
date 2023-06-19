@@ -1,0 +1,1 @@
+pick_place({pick_name}, {place_name})
