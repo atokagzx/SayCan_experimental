@@ -14,6 +14,7 @@ docker run -ti --rm \
       -e OPENAI_KEY=$OPENAI_KEY \
       -e ROS_MASTER_URI=$ROS_MASTER_URI \
       -e ROS_IP=$ROS_IP \
+      -e ROSCONSOLE_FORMAT="[\${severity}] [\${time:%H:%M:%s}] [\${node}]: \${message}" \
       -v $ROOT_DIR:/workspace \
       -v $ROOT_DIR/cache:/root/.cache \
       --net=host \
