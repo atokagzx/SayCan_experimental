@@ -190,7 +190,7 @@ def compose_blocks(boxes):
     return boxes
 
 if __name__ == "__main__":
-    ac.init_node("gsam_node")
+    ac.init_node("detector_node")
     names_to_detect_list = list(rospy.get_param("/alpaca/names_to_detect", "").split(";"))
     debug_mode = rospy.get_param("~debug", False)
     names_to_detect = Prompt(header=rospy.Header(

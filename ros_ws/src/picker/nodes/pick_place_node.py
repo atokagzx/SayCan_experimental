@@ -148,7 +148,7 @@ class PickPlaceSkill:
                     
     
 if __name__ == "__main__":
-    ac.init_node("alpaca_pick_place_skill_node")
+    ac.init_node("pick_place_skill_node")
     ret = ac.move_by_camera([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, np.pi/2)])
     if not ret:
         rospy.logerr("Failed to move to start position")

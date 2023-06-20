@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+
 from typing import Any, List, Tuple, Dict
 import os, sys
 import rospy
@@ -6,7 +7,6 @@ from prompt_tools.msg import Prompt
 from prompt_tools.srv import ActionsRate, ActionsRateResponse
 from prompt_tools.srv import DoneTask, DoneTaskResponse
 from std_srvs.srv import Empty, EmptyResponse
-import re
 import openai
 
 openai.api_key = 'API key'
@@ -40,13 +40,14 @@ class LLMServiceNode:
         while True:
             if self._prompt_stamp is not None:
                 if stamp == rospy.Time(0):
-                    rospy.logwarn("requested stamp is zero, so don't waiting for recent available actions")
+                    rospy.logwarn("requested stamp is zero, so don't waiting for recent prompt")
                     break
                 if self._prompt_stamp > stamp:
                     break
             else:
                 rospy.logwarn("waiting for prompt to be published")
             rate.sleep()
+            # rospy.loginfo(f"waiting for recent available actions, asked for {stamp}, current {self._prompt_stamp}")
         rates = self._rate_actions(self._prompt.body, task, self._prompt.actions)
         response = ActionsRateResponse()
         response.rated_actions = self._prompt
@@ -70,7 +71,7 @@ class LLMServiceNode:
             except openai.error.APIConnectionError as e:
                 rospy.logerr(f"got APIConnectionError exception (maybe SimpleAI server not running?): {e}")
             else:
-                rospy.loginfo(f"got response LLM service")
+                rospy.loginfo(f"got response by LLM service")
                 break
             rate.sleep()
         logprobs_avgs = [sum(choice.logprobs.token_logprobs[1:]) / (len(choice.logprobs.token_logprobs)-1) for choice in completion.choices]

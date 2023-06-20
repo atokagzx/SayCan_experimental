@@ -17,7 +17,7 @@ pick_place(cookie, cup 1)
 pick_place(cookie, cup 2)
 pick_place(cookie, cup 3)
 robot_done()
-Here is an example how to separate bricks and meal between plates:
+Here is an example how to separate bricks from meal into different plates:
 pick_place(fish, red plate)
 pick_place(purple block, green plate)
 pick_place(meat, red plate)
@@ -27,7 +27,7 @@ pick_place(bread, red plate)
 pick_place(colorful brick, green plate)
 pick_place(pink box, green plate)
 robot_done()
-Here is an example how to separate meal and tools between plates:
+Here is an example how to separate meal from tools into different plates:
 pick_place(fish, red plate)
 pick_place(meat, red plate)
 pick_place(egg, red plate)
