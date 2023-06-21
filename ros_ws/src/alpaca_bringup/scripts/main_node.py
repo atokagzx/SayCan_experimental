@@ -21,10 +21,11 @@ from prompt_tools.srv import ActionsRate, ActionsRateRequest, ActionsRateRespons
 from prompt_tools.srv import DoneTask, DoneTaskRequest, DoneTaskResponse
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 
-# task = "To make a tower using colored blocks ending with red block, I should:"
-# task = "To pick blue block and place it on all other items one by one, I should:"
+task = "To make a tower using colored blocks, I should:"
+# task = "To pick red block and place it on all other items one by one, I should:"
 # task = "To separate all blocks from the fish in two different plates, I should:"
-task = "To place all blocks in plates based on their color, I should:"
+# task = "To place all blocks in plates based on their color, I should:"
+# task = "To place all blocks in plates matching color, I should:"
 class MainNode:
     rate_srv_name = "/alpaca/prompt/rate"
     add_done_task_srv_name = "/alpaca/prompt/add_done_task"

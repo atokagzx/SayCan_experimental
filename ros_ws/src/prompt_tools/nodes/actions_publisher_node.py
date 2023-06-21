@@ -80,7 +80,7 @@ class ActionsPublisherNode:
                     "place_obj": place_name
                 })
         action_list.append({
-            "text": "robot_done()",
+            "text": "robot_all_actions_done()",
             "pick_obj": "",
             "place_obj": ""
         })

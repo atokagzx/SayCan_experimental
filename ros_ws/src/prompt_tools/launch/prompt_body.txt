@@ -1,6 +1,6 @@
 Write each action as: pick_place(a, b).
 Separate actions with a new line.
-At the end of the work, type "robot_done()". 
+At the end of the work, type "robot_all_actions_done()". 
 For example, to pick blue block and place it on all other items one by one, I should:
 pick_place(blue block, red block)
 pick_place(blue block, green block)
@@ -11,12 +11,12 @@ For example, to pick fish and place it on all plates one by one, I should:
 pick_place(fish, red plate)
 pick_place(fish, green plate)
 pick_place(fish, yellow plate)
-robot_done()
+robot_all_actions_done()
 Here is an example of moving cookie on all cups one by one:
 pick_place(cookie, cup 1)
 pick_place(cookie, cup 2)
 pick_place(cookie, cup 3)
-robot_done()
+robot_all_actions_done()
 Here is an example how to separate bricks from meal into different plates:
 pick_place(fish, red plate)
 pick_place(purple block, green plate)
@@ -26,7 +26,7 @@ pick_place(orange cube, green plate)
 pick_place(bread, red plate)
 pick_place(colorful brick, green plate)
 pick_place(pink box, green plate)
-robot_done()
+robot_all_actions_done()
 Here is an example how to separate meal from tools into different plates:
 pick_place(fish, red plate)
 pick_place(meat, red plate)
@@ -36,31 +36,31 @@ pick_place(fork, green plate)
 pick_place(knife, green plate)
 pick_place(screwdriver, green plate)
 pick_place(spoon, green plate)
-robot_done()
+robot_all_actions_done()
 Here is an example of building a tower from green, yellow, black and white blocks:
 pick_place(green block, yellow block)
 pick_place(black block, green block)
 pick_place(white block, black block)
-robot_done()
+robot_all_actions_done()
 Here is an example of placing all blocks into the matching color plates:
 pick_place(green block, green plate)
 pick_place(yellow block, yellow plate)
 pick_place(black block, black plate)
 pick_place(white block, white plate)
-robot_done()
+robot_all_actions_done()
 Here is an example of listing the order of stacking the vertical tower from these colored blocks:
 pick_place(yellow block, black block)
 pick_place(green block, yellow block)
 pick_place(white block, green block)
 pick_place(black block, white block)
-robot_done()
+robot_all_actions_done()
 Here is an example how to make a tower using colored blocks if you have other objects on the table:
 pick_place(purple block, pink block)
 pick_place(orange block, purple block)
 pick_place(blue block, orange block)
 pick_place(green block, blue block)
 pick_place(yellow block, green block)
-robot_done()
+robot_all_actions_done()
 As you see, you should set the order of actions in the way that the robot can perform them.
 Try to use as few actions as possible.
 Now, complete the task:

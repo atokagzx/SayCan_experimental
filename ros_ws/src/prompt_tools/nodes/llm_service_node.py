@@ -66,6 +66,7 @@ class LLMServiceNode:
         while True:
             try:
                 completion = openai.Completion.create(model="llama-7B-4b", prompt=prompt, max_tokens=0, logprobs=True, echo=True)
+                print(completion)
             except openai.APIError as e:
                 rospy.logerr(f"got APIError exception (maybe model not loaded by server?): {e}")
             except openai.error.APIConnectionError as e:
@@ -74,7 +75,7 @@ class LLMServiceNode:
                 rospy.loginfo(f"got response by LLM service")
                 break
             rate.sleep()
-        logprobs_avgs = [sum(choice.logprobs.token_logprobs[1:]) / (len(choice.logprobs.token_logprobs)-1) for choice in completion.choices]
+        logprobs_avgs = [sum(choice.logprobs.token_logprobs) / (len(choice.logprobs.token_logprobs)) for choice in completion.choices]
         return logprobs_avgs
 
     def _add_done_task_cb(self, req):
