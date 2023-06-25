@@ -21,11 +21,12 @@ from prompt_tools.srv import ActionsRate, ActionsRateRequest, ActionsRateRespons
 from prompt_tools.srv import DoneTask, DoneTaskRequest, DoneTaskResponse
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 
-task = "To make a tower using colored blocks, I should:"
+# task = "To make a tower using colored blocks, I should:"
 # task = "To pick red block and place it on all other items one by one, I should:"
-# task = "To separate all blocks from the fish in two different plates, I should:"
-# task = "To place all blocks in plates based on their color, I should:"
-# task = "To place all blocks in plates matching color, I should:"
+# task = "Match two blocks with plates of the same color:"
+# task = "Make a tower from red, blue and green blocks"
+# task = "Put the red block on each plate in turn:"
+task = "Build a tower using colored blocks:"
 class MainNode:
     rate_srv_name = "/alpaca/prompt/rate"
     add_done_task_srv_name = "/alpaca/prompt/add_done_task"
@@ -35,18 +36,26 @@ class MainNode:
     boxes_topic_name = "/alpaca/detector/boxes"
     circles_topic_name = "/alpaca/detector/circles"
 
-    def __init__(self):
-        for service_name in [self.rate_srv_name, self.add_done_task_srv_name, self.reset_done_tasks_srv_name]:
+    def __init__(self, only_plan=False):
+        
+        self._boxes = None
+        self._circles = None
+        self._only_plan = only_plan
+        wait_services = []
+        if self._only_plan:
+            wait_services = [self.rate_srv_name, self.add_done_task_srv_name, self.reset_done_tasks_srv_name]
+        else:
+            wait_services = [self.rate_srv_name, self.add_done_task_srv_name, self.reset_done_tasks_srv_name, self.pick_place_srv_name]
+        for service_name in wait_services:
             try:
                 rospy.wait_for_service(service_name, timeout=5)
             except rospy.ROSException:
                 rospy.logerr("service {} not found".format(service_name))
                 sys.exit(1)
-        self._boxes = None
-        self._circles = None
         self._boxes_subscriber = rospy.Subscriber(self.boxes_topic_name, BoxArray, callback_args={"type": "boxes"}, queue_size=2, callback=self._item_detected_cb)
         self._circles_subscriber = rospy.Subscriber(self.circles_topic_name, CircleArray, callback_args={"type": "circles"}, queue_size=2, callback=self._item_detected_cb)
-        self._pick_place_srv = rospy.ServiceProxy(self.pick_place_srv_name, PickPlace)
+        if not self._only_plan:
+            self._pick_place_srv = rospy.ServiceProxy(self.pick_place_srv_name, PickPlace)
         self._rate_srv = rospy.ServiceProxy(self.rate_srv_name, ActionsRate)
         self._add_done_task_srv = rospy.ServiceProxy(self.add_done_task_srv_name, DoneTask)
         self._reset_done_tasks_srv = rospy.ServiceProxy(self.reset_done_tasks_srv_name, Empty)
@@ -116,7 +125,7 @@ class MainNode:
         except RuntimeError as e:
             # if RuntimeError is raised, it means that no items were detected, so we just continue
             rospy.logerr(e)
-            return
+            return False
         pick_place_request = PickPlaceRequest(
             header=rospy.Header(stamp=stamp),
             pick_object_name=pick_obj.name,
@@ -131,23 +140,30 @@ class MainNode:
         except rospy.ServiceException as e:
             rospy.logerr("failed to call pick_place service")
             rospy.logerr(e)
+            return False
         else:
             if resp.success:
                 rospy.loginfo("pick_place service succeeded")
-                add_task_req = DoneTaskRequest()
-                add_task_req.task = selected_action["text"]
-                resp = self._add_done_task_srv(add_task_req)
-                done_tasks_text = "\n".join(f"{i}: {task}" for i, task in enumerate(resp.done_tasks))
-                rospy.loginfo(f"done tasks:\n{done_tasks_text}")
+                self._add_done_action(selected_action)
+                return True
             else:
                 rospy.logerr("pick_place service failed")
                 rospy.logerr(resp.reason)
+                return False
+            
+    def _add_done_action(self, action):
+        add_task_req = DoneTaskRequest()
+        add_task_req.task = action["text"]
+        resp = self._add_done_task_srv(add_task_req)
+        done_tasks_text = "\n".join(f"{i}: {task}" for i, task in enumerate(resp.done_tasks))
+        rospy.loginfo(f"done tasks:\n{done_tasks_text}")
 
     def run(self):
         global task
         rospy.loginfo("main node started")
         # reset done tasks
         self._reset_done_tasks_srv(EmptyRequest())
+        first_action_flag = True
         while not rospy.is_shutdown():
             stamp = rospy.Time.now()
             rate_req = ActionsRateRequest()
@@ -165,15 +181,26 @@ class MainNode:
             rospy.loginfo(f"selected action: {selected_action['text']}")
             # check if "done" substring is in the selected action
             if "done" in selected_action["text"]:
-                rospy.loginfo('"done()" action reached')
-                rospy.signal_shutdown('"done()" action reached')
-                break
+                if first_action_flag and len(actions) > 1:
+                    selected_action = actions[1]
+                    rospy.logwarn(f"selected new action: {selected_action['text']}")
+                else:
+                    rospy.loginfo('"done()" action reached')
+                    rospy.signal_shutdown('"done()" action reached')
+                    break
             if rospy.is_shutdown():
                 break
-            self._pick_place(selected_action, stamp)
+            if not self._only_plan:
+                ret = self._pick_place(selected_action, stamp)
+                if not ret:
+                    continue
+            else:
+                self._add_done_action(selected_action)
+            first_action_flag = False
             
 
 if __name__ == "__main__":
     rospy.init_node("main_node")
-    main_node = MainNode()
+    only_plan = rospy.get_param("~only_plan", False)
+    main_node = MainNode(only_plan=only_plan)
     main_node.run()

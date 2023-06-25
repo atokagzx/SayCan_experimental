@@ -218,7 +218,11 @@ if __name__ == "__main__":
             detecting_names = names_to_detect
             color, depth_map, _camera_info, header = ac.pop_image(add_header=True)
             if len(detecting_names.names):
-                crop = CroppedImage(color, [330, 0, 1600, 1080])
+                crop = CroppedImage(color, [330, 30, 1600, 880])
+                # if debug_mode:
+                #     cv2.imshow("crop", crop())
+                #     if cv2.waitKey(1) & 0xFF == ord('q'):
+                #         break
                 boxes = boxes_detector.get_items(crop(), detecting_names.names)
                 boxes = crop.coords_transform(boxes)
                 circles = plate_detector.detect(color)

@@ -56,7 +56,7 @@ class LLMServiceNode:
         return response
     
     def _rate_actions(self, prompt_body, task, actions):
-        prompt = prompt_body + "\n" + task + "\n"
+        prompt = prompt_body + "\n" + task
         prompt += "\n".join(self._done_tasks) + "\n"
         prompt += "<|endofprompt|>"
         prompt += "<|endofvariant|>".join(actions)
