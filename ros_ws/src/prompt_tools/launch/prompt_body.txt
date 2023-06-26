@@ -1,84 +1,68 @@
-Brick, block, cube, square are all the same objects in this context.
 Write each action as: pick_place(a, b).
 Separate actions with a new line.
-At the end of the work, type "robot_all_actions_done()".
-If you asked to separate something, use only two plates.
-If tou asked to set block on top of tower, you should take it last.
+At the end of the work, type "robot_all_actions_done()". 
 Do not repeat the same action twice.
 Try not to use the same block twice.
-Try to use as few actions as possible.
-On the table are: blue block, red block, green block, yellow block.
-Place red block on all other items in turn:
-pick_place(red block, red block)
-pick_place(red block, green block)
-pick_place(red block, yellow block)
-On the table are: fish, green plate, yellow plate, red block, green block, yellow block, red plate.
-Place fish on all plates in turn:
+Brick, block, cube, square are the same objects in this context.
+Red block, green block, yellow block, blue block are colored blocks.
+Here are some examles with explanations:
+On the table are: fish, green block, yellow block, blue block, red block, green plate, yellow plate, blue plate.
+For example, to pick blue block and place it on all other items one by one:
+pick_place(blue block, red block)
+pick_place(blue block, green block)
+pick_place(blue block, yellow block)
+pick_place(blue block, yellow plate)
+pick_place(blue block, green plate)
+pick_place(blue block, blue plate)
+For example, to pick fish and place it on all plates one by one:
 pick_place(fish, red plate)
 pick_place(fish, green plate)
 pick_place(fish, yellow plate)
 robot_all_actions_done()
-On the table are: green block, yellow block, black block, white block, green plate, yellow plate, white plate, fish.
-Build a tower using green, yellow and white blocks ending with white block on top:
-pick_place(green block, yellow block)
-pick_place(yellow block, green block)
-pick_place(white block, yellow block)
-robot_all_actions_done()
-On the table are: green block, yellow block, red block, blue block, green plate, yellow plate, red plate, blue plate.
-List the order of stacking the vertical tower from colored blocks:
-pick_place(yellow block, black block)
-pick_place(green block, yellow block)
-pick_place(red block, green block)
-pick_place(blue block, red block)
-robot_all_actions_done()
-On the table are: green block, yellow block, blue block, red block, green plate, yellow plate, blue plate.
-Place all blocks into the matching color plates starting with green block:
-pick_place(green block, green plate)
-pick_place(yellow block, yellow plate)
-pick_place(blue block, blue plate)
-robot_all_actions_done()
-On the table are: green block, yellow block, blue block, red block, green plate, yellow plate, blue plate.
-Match two blocks with plates by color:
-pick_place(green block, green plate)
-pick_place(blue block, blue plate)
-robot_all_actions_done()
-On the table are: green block, yellow block, blue block, red block, green plate, yellow plate, blue plate.
-Match one block with plate by color:
-pick_place(green block, green plate)
-robot_all_actions_done()
-On the table are: green block, yellow block, blue block, red block, green plate, yellow plate, blue plate.
-Match all blocks with plate by color:
-pick_place(green block, green plate)
-pick_place(yellow block, yellow plate)
-pick_place(blue block, blue plate)
-robot_all_actions_done()
-On the table are: green block, yellow block, purple block, orange block, blue block, green plate, yellow plate, blue plate.
-Make a tower from blocks on blue plate:
-pick_place(green block, blue plate)
-pick_place(yellow block, green block)
-pick_place(blue block, yellow block)
-pick_place(orange block, blue block)
-robot_all_actions_done()
-On the table are: green block, yellow block, purple block, orange block, blue block, green plate, yellow plate, blue plate.
-Make a tower from green and yellow blocks:
-pick_place(yellow block, green block)
-robot_all_actions_done()
-On the table are: green block, yellow block, purple block, orange block, blue block, green plate, yellow plate, blue plate, fish.
-Separate blocks and fish into different plates:
+Here is an example how to separate blocks from fish into different plates:
 pick_place(green block, green plate)
 pick_place(yellow block, green plate)
 pick_place(fish, yellow plate)
-pick_place(purple block, green plate)
-pick_place(orange block, green plate)
 pick_place(blue block, green plate)
+pick_place(red block, green plate)
 robot_all_actions_done()
-On the table are: green block, yellow block, purple block, orange block, blue block, green plate, yellow plate, blue plate, fish.
-Separate all blocks from fish:
-pick_place(green block, blue plate)
-pick_place(yellow block, blue plate)
-pick_place(fish, yellow plate)
-pick_place(purple block, blue plate)
-pick_place(orange block, blue plate)
+Here is an example of building a tower from green, yellow and blue blocks:
+pick_place(green block, yellow block)
+pick_place(blue block, green block)
+robot_all_actions_done()
+Here is an example of placing all blocks into the matching color plates:
+pick_place(green block, green plate)
+pick_place(yellow block, yellow plate)
 pick_place(blue block, blue plate)
 robot_all_actions_done()
+Here is an example of listing the order of stacking the vertical tower from these colored blocks ending with the red block on top:
+pick_place(green block, yellow block)
+pick_place(blue block, green block)
+pick_place(red block, blue block)
+robot_all_actions_done()
+Here is an example how to make a tower of two blocks:
+pick_place(green block, yellow block)
+robot_all_actions_done()
+Here is an example how to make a tower of three blocks:
+pick_place(green block, yellow block)
+pick_place(blue block, green block)
+robot_all_actions_done()
+Here is an example how to build a tower using green, yellow and blue blocks:
+pick_place(green block, yellow block)
+pick_place(blue block, green block)
+robot_all_actions_done()
+Here is an example how to set cubes in matching color plates:
+pick_place(green block, green plate)
+pick_place(yellow block, yellow plate)
+pick_place(blue block, blue plate)
+robot_all_actions_done()
+Here is an example of making a tower of colored cubes:
+pick_place(green block, yellow block)
+pick_place(blue block, green block)
+pick_place(red block, blue block)
+robot_all_actions_done()
+As you see, you should set the order of actions in the way that the robot can perform them.
+Try to use as few actions as possible.
+Now, complete the task:
 On the table are: {available_objects}.
+Task is:
