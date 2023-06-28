@@ -20,13 +20,15 @@ from prompt_tools.msg import Prompt
 from prompt_tools.srv import ActionsRate, ActionsRateRequest, ActionsRateResponse
 from prompt_tools.srv import DoneTask, DoneTaskRequest, DoneTaskResponse
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
-
+from flask import Flask, request, jsonify
+import threading
 # task = "To make a tower using colored blocks, I should:"
 # task = "To pick red block and place it on all other items one by one, I should:"
 # task = "Match two blocks with plates of the same color:"
 # task = "Make a tower from red, blue and green blocks"
 # task = "Put the red block on each plate in turn:"
 task = "Build a tower using colored blocks:"
+
 class MainNode:
     rate_srv_name = "/alpaca/prompt/rate"
     add_done_task_srv_name = "/alpaca/prompt/add_done_task"
@@ -37,10 +39,10 @@ class MainNode:
     circles_topic_name = "/alpaca/detector/circles"
 
     def __init__(self, only_plan=False):
-        
         self._boxes = None
         self._circles = None
         self._only_plan = only_plan
+        self._force_stop_flag = False
         wait_services = []
         if self._only_plan:
             wait_services = [self.rate_srv_name, self.add_done_task_srv_name, self.reset_done_tasks_srv_name]
@@ -158,13 +160,17 @@ class MainNode:
         done_tasks_text = "\n".join(f"{i}: {task}" for i, task in enumerate(resp.done_tasks))
         rospy.loginfo(f"done tasks:\n{done_tasks_text}")
 
-    def run(self):
-        global task
+    def run(self, task):
         rospy.loginfo("main node started")
         # reset done tasks
         self._reset_done_tasks_srv(EmptyRequest())
         first_action_flag = True
+        self._force_stop_flag = False
+        last_prob = 0
         while not rospy.is_shutdown():
+            if self._force_stop_flag:
+                rospy.loginfo("force stop flag is set, exiting")
+                break
             stamp = rospy.Time.now()
             rate_req = ActionsRateRequest()
             rate_req.task = task
@@ -180,15 +186,21 @@ class MainNode:
             selected_action = actions[0]
             rospy.loginfo(f"selected action: {selected_action['text']}")
             # check if "done" substring is in the selected action
-            if "done" in selected_action["text"]:
+            if "end" in selected_action["text"]:
                 if first_action_flag and len(actions) > 1:
                     selected_action = actions[1]
                     rospy.logwarn(f"selected new action: {selected_action['text']}")
                 else:
                     rospy.loginfo('"done()" action reached')
-                    rospy.signal_shutdown('"done()" action reached')
                     break
+            if selected_action["prob"] < last_prob:
+                rospy.loginfo("probability decreased, exiting")
+                break
+            
             if rospy.is_shutdown():
+                break
+            if self._force_stop_flag:
+                rospy.loginfo("force stop flag is set, exiting")
                 break
             if not self._only_plan:
                 ret = self._pick_place(selected_action, stamp)
@@ -197,10 +209,74 @@ class MainNode:
             else:
                 self._add_done_action(selected_action)
             first_action_flag = False
-            
+            last_prob = selected_action["prob"]
+            rospy.loginfo(f"last probability: {last_prob}")
 
+    def force_stop(self):
+        rospy.loginfo("force stopping")
+        self._force_stop_flag = True
+
+class RESTService:
+    def __init__(self, port, executor):
+        self._port = port
+        self._executor = executor
+        self._app = Flask(__name__)
+        self._configure_endpoints()
+        self._thread = None
+    
+    def _configure_endpoints(self):
+        self._app.add_url_rule("/execute", methods=["POST"], view_func=self._execute)
+        self._app.add_url_rule("/force_stop", methods=["POST"], view_func=self._force_stop)
+        self._app.add_url_rule("/status", methods=["GET"], view_func=self._status)
+
+    def _run_executor(self, request):
+        if self._thread is not None:
+            if self._thread.is_alive():
+                rospy.loginfo("executor thread is already running")
+                return False, "executor thread is already running"
+            self._thread = None
+        self._thread = threading.Thread(target=self._executor.run, daemon=True, name="executor_thread", args=(request,))
+        self._thread.start()
+        return True, "OK"
+
+    def _execute(self):
+        task = request.json["task"]
+        rospy.loginfo(f'received task: "{task}"')
+        ret, msg = self._run_executor(task)
+        if ret:
+            return msg, 200
+        else:
+            return msg, 409
+        
+    def _force_stop(self):
+        rospy.loginfo("received force stop request")
+        self._executor.force_stop()
+        return "OK", 200
+    
+    def _status(self):
+        if self._thread is None:
+            return {"status": "not running", "code": 0}, 200
+        else:
+            if self._thread.is_alive():
+                if self._executor._force_stop_flag:
+                    return {"status": "stopping", "code": 2}, 200
+                else:
+                    return {"status": "running", "code": 1}, 200
+            else:
+                return {"status": "not running", "code": 0}, 200
+
+    def run(self):
+        self._flask_thread = threading.Thread(target=self._app.run, daemon=True, name="flask_thread", args=(), kwargs={"host": "0.0.0.0", "port": self._port})  
+        self._flask_thread.start()
+    
+ 
 if __name__ == "__main__":
     rospy.init_node("main_node")
     only_plan = rospy.get_param("~only_plan", False)
     main_node = MainNode(only_plan=only_plan)
-    main_node.run()
+    rest_service = RESTService(port=5225, executor=main_node)
+    ros_thread = threading.Thread(target=rospy.spin, daemon=True, name="ros_thread", args=())
+    ros_thread.start()
+    rest_service.run()
+    ros_thread.join()
+    # flask service will be stopped when main thread exits

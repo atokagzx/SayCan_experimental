@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from modules.gsam_detector import GSAMDetector
-from modules.plates_detector import PlateDetector
+from modules.circles_detector import PlateDetector
 from modules.utils import CroppedImage, DrawingUtils
 import rospy
 from picker.msg import Prompt, BoxArray, Box, CircleArray, Circle

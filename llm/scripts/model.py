@@ -38,10 +38,14 @@ class AlpacaModel(LanguageModel):
 
     if tokenizer is None or model is None:
         raise Exception("Could not load model or tokenizer")
-    
-    def _score_tokens(self, prompt: str) -> List[Dict[str, Any]]:
-        inputs = self.tokenizer(prompt, return_tensors="pt")
-        tokens = self.tokenizer.convert_ids_to_tokens(inputs.input_ids[0])  
+    # tokenizer.add_special_tokens({"pad_token": " "})
+    # tokenizer.pad_token_id = (
+    # 0  # unk. we want this to be different from the eos token
+    # )
+    def _score_tokens(self, prompt: str, max_tokens) -> List[Dict[str, Any]]:
+        # add padding to the prompt
+        inputs = self.tokenizer(prompt, return_tensors="pt")#, padding='max_length', max_length=max_tokens)
+        tokens = self.tokenizer.convert_ids_to_tokens(inputs.input_ids[0])
         input_ids = inputs.input_ids.cuda()
         token_ids_list = input_ids.tolist()[0]
         output = self.model(
@@ -81,9 +85,14 @@ class AlpacaModel(LanguageModel):
         base_prompt_ids = self.tokenizer(base_prompt, return_tensors="pt").input_ids.tolist()[0]
         base_prompt_tokens = self.tokenizer.convert_ids_to_tokens(base_prompt_ids)
         response = []
+        action_ids_lens = []
+        for action in actions:
+            ids = self.tokenizer(action, return_tensors="pt").input_ids.tolist()[0]
+            action_ids_lens.append(len(ids))
+        max_action_ids_len = max(action_ids_lens) + len(base_prompt_ids)
         for action in actions:
             prompt_to_model = base_prompt + action
-            scored_tokens_dict, prompt_with_action_ids = self._score_tokens(prompt_to_model)
+            scored_tokens_dict, prompt_with_action_ids = self._score_tokens(prompt_to_model, max_action_ids_len)
             # remove base prompt tokens from the scored tokens
             scored_tokens_dict = scored_tokens_dict[len(base_prompt_ids):]
             generated_logprobs = {"tokens": [token['token'] for token in scored_tokens_dict],

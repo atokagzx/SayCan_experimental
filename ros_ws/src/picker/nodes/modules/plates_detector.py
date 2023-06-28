@@ -13,7 +13,7 @@ from modules.utils import DrawingUtils
 class PlateDetector:
     colors = {
     "yellow": ((0, 190, 0), (30, 255, 255)),
-    "blue": ((50, 25, 0), (120, 255, 255)),
+    "blue": ((50, 0, 0), (120, 255, 255)),
     "green": ((30, 60, 0), (60, 255, 255)),
     }
     def __init__(self, min_radius=110,

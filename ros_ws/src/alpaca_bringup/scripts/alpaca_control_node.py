@@ -24,6 +24,7 @@ gripper_speed = 200 # 420 is max
 class Node:
     def __init__(self):
         rospy.init_node("robot_move")
+        # self._init_move_flag = False
         self._tcp_link = "wsg_50_center"
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
@@ -84,15 +85,36 @@ class Node:
     def run(self):
         self._init_services()
         rate = rospy.Rate(10)
+        init_pos_flag = False
         while not rospy.is_shutdown():
             if not self.is_program_running().program_running:
                 rospy.loginfo("robot stopped, restarting...")
                 self.stop()
                 sleep(5)
                 self.play()
+                if not init_pos_flag:
+                    try:
+                        self.move_robot()
+                    except RuntimeError:
+                        rospy.logerr("robot move failed")
+                    else:
+                        rospy.loginfo("robot move succeeded")
+                        init_pos_flag = True
+
             # publish pose to camera
             self._pose_to_camera_topic.publish(self.pose_to_camera())
             rate.sleep()
+
+    def move_robot(self, target=np.deg2rad([-32, -130, 110, -70, -90, -30])):
+        # move robot to target joint position
+        rospy.loginfo("robot current posX:\n" + str(self.move_group.get_current_pose()))
+        rospy.loginfo(f"robot current posJ: {np.rad2deg(self.move_group.get_current_joint_values())} (deg)")
+        rospy.loginfo(f"robot target posJ: {np.rad2deg(target)} (deg)")
+        self.move_group.set_joint_value_target(target.tolist())
+        is_success = self.move_group.go(wait=True)
+        if not is_success:
+            raise RuntimeError("move failed")
+
 
     def move_by_camera(self, goal):
         time = rospy.Time.now()

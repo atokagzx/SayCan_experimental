@@ -24,9 +24,14 @@ def move_gripper_wrapper(positions: List[ac.Point6D]):
         raise ValueError("move_gripper failed")
     
 def set_gripper_wrapper(state: bool):
-    ret = ac.gripper(state)
-    if not ret:
-        raise ValueError("set_gripper failed")
+    rate = rospy.Rate(0.5)
+    for _ in range(5):
+        ret = ac.gripper(state)
+        if ret:
+            return
+        rospy.logwarn("set_gripper failed, retrying...")
+        rate.sleep()
+    raise ValueError("set_gripper failed")
 
 class PickPlaceSkill:
     pick_box_srv_name = "/alpaca/get_pick_config_box"
@@ -71,15 +76,15 @@ class PickPlaceSkill:
         pick_position = [pick_position.x, pick_position.y, pick_position.z]
         place_position = place_config.object_position
         place_position = [place_position.x, place_position.y, place_position.z]
-        pick_orientation = pick_config.object_orientation
-        place_orientation = place_config.object_orientation
+        pick_orientation = pick_config.object_orientation + np.pi
+        place_orientation = place_config.object_orientation + np.pi
         # place_position[2] -= 0.06
 
         try:
             # open gripper
             set_gripper_wrapper(False)
             # move to start position
-            move_gripper_wrapper([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, np.pi/2),
+            move_gripper_wrapper([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, -np.pi/2),
                                 ac.Point6D(pick_position[0], pick_position[1], pick_position[2] - 0.2, np.pi, 0, pick_orientation),
                                 ac.Point6D(pick_position[0], pick_position[1], pick_position[2] - 0.0085, np.pi, 0, pick_orientation)])
             # close gripper
@@ -90,10 +95,11 @@ class PickPlaceSkill:
             # open gripper
             set_gripper_wrapper(False)
             # move to start position
-            move_gripper_wrapper([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, np.pi/2)])
+            move_gripper_wrapper([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, -np.pi/2)])
         except ValueError as e:
             # open gripper
             ac.gripper(False)
+            move_gripper_wrapper([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, -np.pi/2)])
             return False, PickPlaceResponse(success=False, reason=f"failed to execute pick_place skill: {e}")
         else:
             return True, PickPlaceResponse(success=True)
@@ -149,7 +155,7 @@ class PickPlaceSkill:
     
 if __name__ == "__main__":
     ac.init_node("pick_place_skill_node")
-    ret = ac.move_by_camera([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, np.pi/2)])
+    ret = ac.move_by_camera([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, -np.pi/2)])
     if not ret:
         rospy.logerr("Failed to move to start position")
         exit(1)

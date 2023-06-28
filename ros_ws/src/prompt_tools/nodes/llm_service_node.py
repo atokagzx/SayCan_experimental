@@ -56,12 +56,14 @@ class LLMServiceNode:
         return response
     
     def _rate_actions(self, prompt_body, task, actions):
-        prompt = prompt_body + "\n" + task
+        prompt = prompt_body.format(task=task)
+        # enumerated_done_tasks = [f"{i + 1}. {task}" for i, task in enumerate(self._done_tasks)]
         prompt += "\n".join(self._done_tasks) + "\n"
         prompt += "<|endofprompt|>"
         prompt += "<|endofvariant|>".join(actions)
         # rospy.loginfo(f"prompt:\n{prompt}")
         rospy.loginfo(f"checking prompt by {self.model_name} service {openai.api_base}")
+        rospy.loginfo(f"prompt:\n{prompt.split('<|endofprompt|>')[0]}")
         rate = rospy.Rate(0.5)
         while True:
             try:
@@ -76,6 +78,7 @@ class LLMServiceNode:
                 break
             rate.sleep()
         logprobs_avgs = [sum(choice.logprobs.token_logprobs) / (len(choice.logprobs.token_logprobs)) for choice in completion.choices]
+        # logprobs_avgs = [sum(choice.logprobs.token_logprobs) for choice in completion.choices]
         return logprobs_avgs
 
     def _add_done_task_cb(self, req):

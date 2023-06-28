@@ -168,7 +168,8 @@ RUN apt update && apt install -y ros-noetic-moveit-visual-tools \
                                 libopencv-dev
 
 RUN apt update && apt install -y python3-numpy python-numpy
-
+RUN pip3 install --ignore-installed flask flask-cors flask-restful flask-socketio 
+RUN pip3 install --upgrade jax
 # ENV PATH="/usr/local/cuda-12.1/bin:$PATH"
 # ENV LD_LIBRARY_PATH="/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH"
 ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_connector/:/workspace/modules/vild/:/Grounded-Segment-Anything/"

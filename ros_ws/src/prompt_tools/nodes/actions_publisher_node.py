@@ -80,7 +80,7 @@ class ActionsPublisherNode:
                     "place_obj": place_name
                 })
         action_list.append({
-            "text": "robot_all_actions_done()",
+            "text": "end_of_action_list(stop, don't touch fish, forever)",
             "pick_obj": "",
             "place_obj": ""
         })
@@ -90,7 +90,7 @@ class ActionsPublisherNode:
         message = Prompt()
         message.header.stamp = stamp
         message.header.frame_id = "actions_publisher"
-        message.body = self._base_prompt.format(available_objects=", ".join(self._available_items))
+        message.body = self._base_prompt.format(available_objects=", ".join(self._available_items), task="{task}")
         message.actions = list(map(lambda x: x["text"], description))
         message.pick_names = list(map(lambda x: x["pick_obj"], description))
         message.place_names = list(map(lambda x: x["place_obj"], description))
