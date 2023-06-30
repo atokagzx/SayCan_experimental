@@ -213,29 +213,42 @@ if __name__ == "__main__":
     depth_publisher = rospy.Publisher("/alpaca/detector/camera/aligned_depth", Image, queue_size=1, latch=False)
     camera_info_publisher = rospy.Publisher("/alpaca/detector/camera/camera_info", CameraInfo, queue_size=1, latch=False)
     masked_frame_publisher = rospy.Publisher("/alpaca/detector/camera/detected", Image, queue_size=1, latch=False)
+    crop_frame = (330, 30, 1600, 880)
+    filter_out_trapezoid = ((350, 20),
+                            (1600, 20),
+                            (1600, 850),
+                            (350, 850))
     while not ac.is_shutdown():
         if ac.is_image_ready():
             detecting_names = names_to_detect
             color, depth_map, _camera_info, header = ac.pop_image(add_header=True)
             if len(detecting_names.names):
-                crop = CroppedImage(color, [330, 30, 1600, 880])
+                crop = CroppedImage(color, list(crop_frame))
                 # if debug_mode:
                 #     cv2.imshow("crop", crop())
                 #     if cv2.waitKey(1) & 0xFF == ord('q'):
                 #         break
                 boxes = boxes_detector.get_items(crop(), detecting_names.names)
                 boxes = crop.coords_transform(boxes)
-                circles = plate_detector.detect(color)
+                circles = plate_detector.detect(crop())
+                circles = crop.coords_transform(circles)
                 boxes = filter_plates_from_boxes(boxes, circles)
                 boxes = GSAMDetector.filter_same_items(boxes)
                 boxes = compose_blocks(boxes)
                 boxes = filter_out_low_score_fish(boxes)
-                boxes = filter_outer_boxes(boxes)
+                boxes = filter_outer_boxes(boxes, filter_out_trapezoid)
                 publish_detected_boxes(boxes, header, detecting_names)
                 publish_detected_circles(circles, header)
                 publish_images(color, depth_map, _camera_info, header)
                 if debug_mode or masked_frame_publisher.get_num_connections():
                     masked_frame = color.copy()
+                    # add weighted cropped zone
+                    crop_mask = np.full_like(masked_frame, (255, 0, 255))
+                    trapezoid_mask = np.full_like(masked_frame, (0, 255, 255))
+                    cv2.rectangle(crop_mask, (crop._crop_box[:2]), (crop._crop_box[2:]), (0, 0, 0), -1)
+                    cv2.fillConvexPoly(trapezoid_mask, np.array(filter_out_trapezoid), (0, 0, 0))
+                    masked_frame = cv2.addWeighted(masked_frame, 1, crop_mask, 0.3, 0)
+                    masked_frame = cv2.addWeighted(masked_frame, 1, trapezoid_mask, 0.3, 0)
                     masked_frame = DrawingUtils.draw_plates(masked_frame, circles)
                     for item in boxes:
                         masked_frame = DrawingUtils.draw_box_info(masked_frame, item)

@@ -18,19 +18,32 @@ from picker.srv import PickConfig, PickConfigResponse, PickConfigRequest
 from picker.srv import PickPlace, PickPlaceResponse, PickPlaceRequest
 from modules.ros_utils import DataSubscriber
 
+def search_neighbourhood(positions: List[ac.Point6D], radius: float, step: float):
+    yield positions
+    for i in range(5):
+        new_positions = []
+        for pos in positions:
+            point_list = np.array(list(pos))
+            new_positions.append(ac.Point6D(*(point_list + np.random.uniform(-step, step, size=6))))
+        yield new_positions
+
 def move_gripper_wrapper(positions: List[ac.Point6D]):
-    ret = ac.move_by_camera(positions)
-    if not ret:
-        raise ValueError("move_gripper failed")
+    positions_gen = search_neighbourhood(positions, 0.01, 0.01)
+    for pos in positions_gen:
+        ret = ac.move_by_camera(pos)
+        if ret:
+            return True
+        rospy.logwarn("move_by_camera failed, retrying...")
+        sleep(1)
+    raise ValueError("move_by_camera failed")
     
 def set_gripper_wrapper(state: bool):
-    rate = rospy.Rate(0.5)
     for _ in range(5):
         ret = ac.gripper(state)
         if ret:
-            return
+            return True
         rospy.logwarn("set_gripper failed, retrying...")
-        rate.sleep()
+        sleep(1)
     raise ValueError("set_gripper failed")
 
 class PickPlaceSkill:
@@ -98,7 +111,7 @@ class PickPlaceSkill:
             move_gripper_wrapper([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, -np.pi/2)])
         except ValueError as e:
             # open gripper
-            ac.gripper(False)
+            set_gripper_wrapper(False)
             move_gripper_wrapper([ac.Point6D(0.0, -0.3, 0.7, np.pi, 0, -np.pi/2)])
             return False, PickPlaceResponse(success=False, reason=f"failed to execute pick_place skill: {e}")
         else:
@@ -135,6 +148,9 @@ class PickPlaceSkill:
                     rospy.signal_shutdown(f"service call failed: {e}")
                 else:
                     if response.success:
+                        if req['object_type'].lower() == "circle":
+                            response.object_position.x += 0.03
+                            response.object_position.y += 0.03
                         config[config_name] = response
                         break
                     else:

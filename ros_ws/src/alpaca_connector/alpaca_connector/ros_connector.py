@@ -97,6 +97,12 @@ class Point6D:
         
     def __ne__(self, other):
         return not self.__eq__(other)
+    
+    def __add__(self, other):
+        if isinstance(other, Point6D):
+            return Point6D(*[i + j for i, j in zip(self, other)])
+        else:
+            raise TypeError("unsupported operand type(s) for +: 'Point6D' and '{}'".format(type(other).__name__))
 
 def _node_initialized(func):
     def wrapper(*args, **kwargs):
@@ -210,8 +216,10 @@ def gripper(state:bool):
         ret = srv()
         ret = ret.success
     except rospy.ServiceException as e:
-        rospy.logerr(f"Service call failed: {e}")
+        rospy.logerr(f"service call failed: {e}")
         ret = False
+    if not ret:
+        rospy.logwarn("gripper service failed")
     return ret
         
 

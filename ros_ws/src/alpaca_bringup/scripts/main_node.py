@@ -2,7 +2,7 @@
 
 from typing import Any, List, Tuple, Dict
 import alpaca_connector as ac
-from time import sleep
+from time import sleep, time
 import cv2
 import numpy as np
 from PIL import Image
@@ -154,13 +154,17 @@ class MainNode:
                 return False
             
     def _add_done_action(self, action):
+        YELLOW = '\033[0;33m'
+        NC = '\033[0m' 
         add_task_req = DoneTaskRequest()
         add_task_req.task = action["text"]
         resp = self._add_done_task_srv(add_task_req)
         done_tasks_text = "\n".join(f"{i}: {task}" for i, task in enumerate(resp.done_tasks))
-        rospy.loginfo(f"done tasks:\n{done_tasks_text}")
+        rospy.loginfo(f"done tasks:\n{YELLOW}{done_tasks_text}{NC}")
 
     def run(self, task):
+        YELLOW = '\033[0;33m'
+        NC = '\033[0m' 
         rospy.loginfo("main node started")
         # reset done tasks
         self._reset_done_tasks_srv(EmptyRequest())
@@ -175,9 +179,9 @@ class MainNode:
             rate_req = ActionsRateRequest()
             rate_req.task = task
             rate_req.stamp = stamp
-            rospy.loginfo(f"requesting actions rate for task: {task}")
+            rospy.loginfo(f"requesting actions rate for task: {YELLOW}{task}{NC}")
             rate_resp = self._rate_srv(rate_req)
-            rospy.loginfo("received actions rate")
+            rospy.loginfo(f"received actions rate, response in {(rospy.Time.now() - stamp) / 1e9} seconds")
             _prompt_body, _done_tasks, actions = self._rated_actions_to_dict(rate_resp)
             if len(actions) == 0:
                 rospy.loginfo("no actions to do")
@@ -191,10 +195,10 @@ class MainNode:
                     selected_action = actions[1]
                     rospy.logwarn(f"selected new action: {selected_action['text']}")
                 else:
-                    rospy.loginfo('"done()" action reached')
+                    rospy.loginfo(f'{YELLOW}"done()" action reached{NC}')
                     break
             if selected_action["prob"] < last_prob:
-                rospy.loginfo("probability decreased, exiting")
+                rospy.loginfo(f"{YELLOW}probability decreased, decided to done(){NC}")
                 break
             
             if rospy.is_shutdown():
