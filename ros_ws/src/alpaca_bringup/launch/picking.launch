@@ -1,0 +1,8 @@
+<launch>
+    <node
+        name="pick_config_node"  pkg="picker" type="pick_config_node.py" output="screen" respawn="true">
+    </node>
+    <node
+        name="pick_place_skill_node"  pkg="picker" type="pick_place_node.py" output="screen" respawn="true">
+    </node>
+</launch>

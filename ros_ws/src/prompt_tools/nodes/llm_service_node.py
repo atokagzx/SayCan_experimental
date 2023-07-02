@@ -3,7 +3,7 @@
 from typing import Any, List, Tuple, Dict
 import os, sys
 import rospy
-from prompt_tools.msg import Prompt
+from prompt_tools.msg import Prompt, PromptMonitoring
 from prompt_tools.srv import ActionsRate, ActionsRateResponse
 from prompt_tools.srv import DoneTask, DoneTaskResponse
 from std_srvs.srv import Empty, EmptyResponse
@@ -24,6 +24,7 @@ class LLMServiceNode:
         self._rate_service = rospy.Service(self.rate_srv_name, ActionsRate, self._rate_service_cb)
         self._add_done_task_service = rospy.Service(self.add_done_task_srv_name, DoneTask, self._add_done_task_cb)
         self._reset_done_tasks_service = rospy.Service(self.reset_done_tasks_srv_name, Empty, self._reset_done_tasks_cb)
+        self._prompt_monitoring_topic = rospy.Publisher("/alpaca/prompt/monitoring", PromptMonitoring, queue_size=1, latch=True)
         self._prompt_stamp = None
         self._prompt = None
         self._done_tasks = []
@@ -48,7 +49,21 @@ class LLMServiceNode:
                 rospy.logwarn("waiting for prompt to be published")
             rate.sleep()
             # rospy.loginfo(f"waiting for recent available actions, asked for {stamp}, current {self._prompt_stamp}")
+        monitoring_msg = PromptMonitoring()
+        monitoring_msg.header.stamp = stamp
+        monitoring_msg.user_prompt = task
+        monitoring_msg.actions = self._prompt.actions
+        monitoring_msg.probabilities = [0.0] * len(self._prompt.actions)
+        monitoring_msg.done_actions = self._done_tasks
+        self._prompt_monitoring_topic.publish(monitoring_msg)
         rates = self._rate_actions(self._prompt.body, task, self._prompt.actions)
+        monitoring_msg = PromptMonitoring()
+        monitoring_msg.header.stamp = stamp + rospy.Duration(0.1)
+        monitoring_msg.user_prompt = task
+        monitoring_msg.actions = self._prompt.actions
+        monitoring_msg.probabilities = rates
+        monitoring_msg.done_actions = self._done_tasks
+        self._prompt_monitoring_topic.publish(monitoring_msg)
         response = ActionsRateResponse()
         response.rated_actions = self._prompt
         response.rated_actions.probabilities = rates

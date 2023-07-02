@@ -43,6 +43,7 @@ class MainNode:
         self._circles = None
         self._only_plan = only_plan
         self._force_stop_flag = False
+        self._selected_action = ""
         wait_services = []
         if self._only_plan:
             wait_services = [self.rate_srv_name, self.add_done_task_srv_name, self.reset_done_tasks_srv_name]
@@ -171,6 +172,7 @@ class MainNode:
         first_action_flag = True
         self._force_stop_flag = False
         last_prob = 0
+        self._selected_action = ""
         while not rospy.is_shutdown():
             if self._force_stop_flag:
                 rospy.loginfo("force stop flag is set, exiting")
@@ -196,11 +198,13 @@ class MainNode:
                     rospy.logwarn(f"selected new action: {selected_action['text']}")
                 else:
                     rospy.loginfo(f'{YELLOW}"done()" action reached{NC}')
+                    self._selected_action = "done()"
                     break
             if selected_action["prob"] < last_prob:
                 rospy.loginfo(f"{YELLOW}probability decreased, decided to done(){NC}")
+                self._selected_action = "done(), probability decreased"
                 break
-            
+            self._selected_action = selected_action["text"]
             if rospy.is_shutdown():
                 break
             if self._force_stop_flag:
@@ -258,16 +262,17 @@ class RESTService:
         return "OK", 200
     
     def _status(self):
+        selected_action = self._executor._selected_action
         if self._thread is None:
-            return {"status": "not running", "code": 0}, 200
+            return {"status": "not running", "code": 0, "selected_action": selected_action}, 200
         else:
             if self._thread.is_alive():
                 if self._executor._force_stop_flag:
-                    return {"status": "stopping", "code": 2}, 200
+                    return {"status": "stopping", "code": 2, "selected_action": selected_action}, 200
                 else:
-                    return {"status": "running", "code": 1}, 200
+                    return {"status": "running", "code": 1, "selected_action": selected_action}, 200
             else:
-                return {"status": "not running", "code": 0}, 200
+                return {"status": "not running", "code": 0, "selected_action": selected_action}, 200
 
     def run(self):
         self._flask_thread = threading.Thread(target=self._app.run, daemon=True, name="flask_thread", args=(), kwargs={"host": "0.0.0.0", "port": self._port})  

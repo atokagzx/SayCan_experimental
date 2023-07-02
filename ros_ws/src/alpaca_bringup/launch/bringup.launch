@@ -27,5 +27,6 @@
 
     <node name="alpaca_control_node"  pkg="alpaca_bringup" type="alpaca_control_node.py" output="screen" respawn="true">
     </node>
-    
+    <include file="$(find alpaca_bringup)/launch/picking.launch">
+    </include>
 </launch>
