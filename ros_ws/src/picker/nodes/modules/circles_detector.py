@@ -12,8 +12,8 @@ from modules.utils import DrawingUtils
 
 class PlateDetector:
     colors = {
-    "yellow": ((0, 190, 0), (30, 255, 255)),
-    "blue": ((50, 25, 0), (120, 255, 255)),
+    "yellow": ((0, 100, 0), (30, 255, 255)),
+    "blue": ((60, 45, 0), (120, 255, 255)),
     "green": ((30, 60, 0), (60, 255, 255)),
     }
     def __init__(self, min_radius=110,
@@ -65,7 +65,7 @@ class PlateDetector:
             }
         '''
         grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        circles = cv2.HoughCircles(grayscale, cv2.HOUGH_GRADIENT, dp=1, minDist=150, param1=35, param2=35, minRadius=self._min_radius, maxRadius=self._max_radius)
+        circles = cv2.HoughCircles(grayscale, cv2.HOUGH_GRADIENT, dp=1, minDist=150, param1=30, param2=25, minRadius=self._min_radius, maxRadius=self._max_radius)
         circles = np.uint16(np.around(circles))
         circles = circles[0, :]
         

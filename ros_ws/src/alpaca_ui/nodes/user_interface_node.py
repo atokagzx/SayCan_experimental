@@ -25,6 +25,7 @@ class UserInterface:
     def __init__(self):
         self._app = QApplication([])
         self._window = self.MainWindow()
+        self._user_task = ""
         self._window.microToggle.stateChanged.connect(self._on_micro_toggle)
         # QDialogButtonBox
         # self.promptConfirm.setStandardButtons(QtWidgets.QDialogButtonBox.Abort|QtWidgets.QDialogButtonBox.Ok)
@@ -53,13 +54,14 @@ class UserInterface:
         if not self._is_running:
             self._window.scoredActions.setText(f"available actions:\n{actions}")
     
-    def set_user_input(self, user_input):
+    def set_user_input(self, eng, rus):
+        self._user_task = eng
         if self._window.microToggle.isChecked() and not self._is_running:
-            rospy.loginfo(f'setting user input: "{user_input}"')
-            self._window.userInput.setText(user_input)
+            rospy.loginfo(f'setting user input: "{rus}"')
+            self._window.userInput.setText(rus)
             self._window.promptConfirm.setEnabled(True)
         else:
-            rospy.loginfo(f'not setting user input: "{user_input}"')
+            rospy.loginfo(f'micro off, not setting user input: "{rus}"')
     
     def _on_micro_toggle(self, state):
         if state == Qt.Unchecked:
@@ -69,7 +71,7 @@ class UserInterface:
     def _on_prompt_confirm(self):
         rospy.loginfo('prompt confirmed')
         self._window.promptConfirm.setEnabled(False)
-        request = requests.post('http://localhost:5225/execute', json={'task': self._window.userInput.text()})
+        request = requests.post('http://localhost:5225/execute', json={'task': self._user_task})
 
     def _on_prompt_reject(self):
         rospy.loginfo('prompt rejected')
@@ -85,10 +87,14 @@ class UserInterface:
     
     def _request_thread_loop(self):
         while True:
-            try:
                 # rospy.loginfo('requesting prompt monitoring')
+            try:
                 response = requests.get('http://localhost:5225/status')
-                # rospy.loginfo(f'got response: {response}')
+            except requests.exceptions.ConnectionError as e:
+                rospy.logerr(f"connection error: {e}")
+                sleep(2)
+            # rospy.loginfo(f'got response: {response}')
+            else:
                 self._window.status.setText(response.json()['status'])
                 code = response.json()['code']
                 
@@ -108,13 +114,15 @@ class UserInterface:
                     self._window.microToggle.setEnabled(False)
                     self._is_running = True
                 self._window.selectedAction.setText(response.json()['selected_action'])
-            except:
-                rospy.logerr(traceback.format_exc())
             sleep(0.2)
 
     def _on_cancel_button(self):
         rospy.loginfo('canceling')
-        requests.post('http://localhost:5225//force_stop')
+        try:
+            response = requests.post('http://localhost:5225/force_stop')
+            rospy.loginfo(f'got response: {response}')
+        except requests.exceptions.ConnectionError as e:
+            rospy.logerr(f"connection error: {e}")
 
     def close(self):
         self._app.quit()
@@ -184,10 +192,10 @@ class RESTApplication:
         self._app.add_url_rule("/execute", methods=["POST"], view_func=self._execute)
 
     def _execute(self):
-        task = request.json["task"]
+        task, rus = request.json["task"], request.json["rus"]
         rospy.loginfo(f'received task: "{task}"')
         if self._executor:
-            self._executor(task)
+            self._executor(task, rus)
         else:
             rospy.logwarn("executor not set")
         return "OK", 200
