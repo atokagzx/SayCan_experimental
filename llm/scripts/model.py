@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+import time
 from typing import Optional, Union, List, Dict, Any, Tuple
 
 from get_models import ALPACA_ID, LLAMA_ID, TOKENIZER_ID
@@ -42,26 +43,53 @@ class AlpacaModel(LanguageModel):
     # tokenizer.pad_token_id = (
     # 0  # unk. we want this to be different from the eos token
     # )
-    def _score_tokens(self, prompt: str, max_tokens) -> List[Dict[str, Any]]:
-        # add padding to the prompt
-        inputs = self.tokenizer(prompt, return_tensors="pt")#, padding='max_length', max_length=max_tokens)
-        tokens = self.tokenizer.convert_ids_to_tokens(inputs.input_ids[0])
+    def _score_base_prompt(self, base_prompt: str) -> List[Dict[str, Any]]:
+        inputs = self.tokenizer(base_prompt, return_tensors="pt")#, padding='max_length', max_length=max_tokens)
         input_ids = inputs.input_ids.cuda()
         token_ids_list = input_ids.tolist()[0]
         output = self.model(
             input_ids = inputs.input_ids.cuda(),
             attention_mask = inputs.attention_mask.cuda(),
             output_attentions = True,
+            use_cache = True,
         )
-        # get the scores of all (32000) ids for every token in the prompt
-        tokens_scores_all = output.logits[0].tolist()
-        # add the score of the first token
-        tokens_scores_selected = [None]
-        # select only the scores of the tokens in the prompt, skipping the first token (last score is for the new token, so we skip it)
-        tokens_scores_selected.extend([score[idx] for idx, score in zip(token_ids_list[1:], tokens_scores_all)])
-        # zip the tokens and scores together and create a list of dictionaries 
-        scored_tokens_dict = [dict(zip(['token', 'score'], token_score)) for token_score in zip(tokens, tokens_scores_selected)]
-        return scored_tokens_dict, token_ids_list
+        past_key_values = self.model._extract_past_from_model_output(output, standardize_cache_format=False)
+        return input_ids, past_key_values
+    
+    def _score_tokens(self, base_prompt_ids, past_key_values, action) -> List[Dict[str, Any]]:
+        # add padding to the prompt
+        timestamp = time.time()
+        inputs = self.tokenizer(action, return_tensors="pt")#, padding='max_length', max_length=max_tokens)
+        input_ids = inputs.input_ids.cuda()
+        # tokens = self.tokenizer.convert_ids_to_tokens(inputs.input_ids[0])
+        input_ids = base_prompt_ids + inputs.input_ids[0][0]
+        # token_ids_list = input_ids.tolist()[0]
+        local_past_key_values = copy.deepcopy(past_key_values)
+        scored_tokens_dict = []
+        for existed_token in inputs.input_ids[0][1:]:
+            output = self.model(
+                input_ids = input_ids,
+                # attention_mask = inputs.attention_mask.cuda(),
+                output_attentions = True,
+                use_cache = True,
+                # past_key_values = local_past_key_values
+            )
+            next_token_logits = output.logits[:, -1, :]
+            next_tokens = torch.argmax(next_token_logits, dim=-1)
+
+            # get existed_token's score and replace next_token with existed_token
+            existed_token_reshaped = existed_token.repeat(next_tokens.shape[0])
+            existed_token_score = next_token_logits[0][existed_token_reshaped]
+            next_tokens = existed_token_reshaped
+
+            # print("=========================\n" * 50, existed_token_score)
+            scored_tokens_dict.append({"token": existed_token, "score": existed_token_score})
+            input_ids = torch.cat([input_ids, next_tokens[:, None]], dim=-1)
+            input_ids = input_ids.cuda()
+            # input_ids = torch.cat([input_ids, existed_token.unsqueeze(0)], dim=1)
+            local_past_key_values = self.model._extract_past_from_model_output(output, standardize_cache_format=False)
+        print(f"Time to score tokens: {time.time() - timestamp}")
+        return scored_tokens_dict, None# token_ids_list
 
     def complete(
         self,
@@ -80,6 +108,7 @@ class AlpacaModel(LanguageModel):
         best_of: int = 0,
         logit_bias: dict = {},
     ) -> str:
+        self._base_prompt_cache = None
         base_prompt, variants = prompt.split("<|endofprompt|>")
         actions = list(variants.split("<|endofvariant|>"))
         base_prompt_ids = self.tokenizer(base_prompt, return_tensors="pt").input_ids.tolist()[0]
@@ -90,9 +119,9 @@ class AlpacaModel(LanguageModel):
             ids = self.tokenizer(action, return_tensors="pt").input_ids.tolist()[0]
             action_ids_lens.append(len(ids))
         max_action_ids_len = max(action_ids_lens) + len(base_prompt_ids)
+        base_prompt_ids, past_key_values = self._score_base_prompt(base_prompt)
         for action in actions:
-            prompt_to_model = base_prompt + action
-            scored_tokens_dict, prompt_with_action_ids = self._score_tokens(prompt_to_model, max_action_ids_len)
+            scored_tokens_dict, prompt_with_action_ids = self._score_tokens(base_prompt_ids, past_key_values, action)
             # remove base prompt tokens from the scored tokens
             scored_tokens_dict = scored_tokens_dict[len(base_prompt_ids):]
             generated_logprobs = {"tokens": [token['token'] for token in scored_tokens_dict],
