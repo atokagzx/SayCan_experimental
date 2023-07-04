@@ -71,12 +71,15 @@ class LLMServiceNode:
         return response
     
     def _rate_actions(self, prompt_body, task, actions):
-        prompt = prompt_body.format(task=task)
+        prompt = prompt_body
         # enumerated_done_tasks = [f"{i + 1}. {task}" for i, task in enumerate(self._done_tasks)]
-        prompt += "\n".join(self._done_tasks) + "\n"
         prompt += "<|endofprompt|>"
+        prompt += f' {task}:\n'
+        prompt += "\n".join(self._done_tasks) + "\n"
+        prompt += "<|endofhistory|>"
         prompt += "<|endofvariant|>".join(actions)
         # rospy.loginfo(f"prompt:\n{prompt}")
+        print(prompt)
         rospy.loginfo(f"checking prompt by {self.model_name} service {openai.api_base}")
         rospy.loginfo(f"prompt:\n{prompt.split('<|endofprompt|>')[0]}")
         rate = rospy.Rate(0.5)
