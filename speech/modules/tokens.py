@@ -12,7 +12,7 @@ from dateutil import parser
 import traceback
 
 class TokenUpdater:
-    def __init__(self, speech_auth_token, oauth_token):
+    def __init__(self, speech_auth_token=None, oauth_token=None):
         self._logger = logging.getLogger('token_updater')
         self._speech_token = None
         self._iam_token = None
@@ -29,20 +29,24 @@ class TokenUpdater:
     def _expire_watcher(self):
         while True:
             try:
-                self._logger.debug(f'speech token time left: {self._speech_token_expires - datetime.datetime.now()}')
-                self._logger.debug(f'iam token time left: {self._iam_token_expires - datetime.datetime.now()}')
-                if self._speech_token_expires - datetime.timedelta(minutes=20) <= datetime.datetime.now():
-                    self._logger.info('speech token expires soon')
-                    self._update_speech_token()
-                if self._iam_token_expires - datetime.timedelta(hours=6) <= datetime.datetime.now():
-                    self._logger.info('iam token expires soon')
-                    self._update_iam_token()
+                if self._speech_auth_token is not None:
+                    self._logger.debug(f'speech token time left: {self._speech_token_expires - datetime.datetime.now()}')
+                    if self._speech_token_expires - datetime.timedelta(minutes=20) <= datetime.datetime.now():
+                        self._logger.info('speech token expires soon')
+                        self._update_speech_token()
+                if self._oauth_token is not None:
+                    self._logger.debug(f'iam token time left: {self._iam_token_expires - datetime.datetime.now()}')
+                    if self._iam_token_expires - datetime.timedelta(hours=6) <= datetime.datetime.now():
+                        self._logger.info('iam token expires soon')
+                        self._update_iam_token()
             except Exception as e:
                 self._logger.error(f'error in token update thread: {e}')
                 self._logger.error(traceback.format_exc())
             time.sleep(10)
 
     def _update_iam_token(self):
+        if self._oauth_token is None:
+            return
         with self._lock:
             while True:
                 try:
@@ -64,6 +68,8 @@ class TokenUpdater:
             self._logger.info(f'updated iam token')
 
     def _update_speech_token(self):
+        if self._speech_auth_token is None:
+            return
         with self._lock:
             while True:
                 try:
@@ -89,22 +95,18 @@ class TokenUpdater:
             
     @property
     def speech_token(self):
+        if self._speech_auth_token is None:
+            raise RuntimeError('speech token is not configured')
         with self._lock:
             return self._speech_token
         
     @property
     def iam_token(self):
+        if self._oauth_token is None:
+            raise RuntimeError('iam token is not configured')
         with self._lock:
             return self._iam_token
         
-class SpeechRecognizer:
-    def __init__(self, token_getter):
-        self._logger = logging.getLogger('visper')
-        self._token_getter = token_getter
-
-    def _recognize(self, audio):
-        pass
-
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('token_updater').setLevel(logging.DEBUG)
@@ -112,7 +114,6 @@ if __name__ == '__main__':
     oauth_token = os.environ['OAUTH_TOKEN']
     folder_id = os.environ['FOLDER_ID']
     token_updater = TokenUpdater(speech_auth_token, oauth_token)
-    speech_recongnizer = SpeechRecognizer(token_updater)
     try:
         while True:
             print(token_updater.speech_token)
