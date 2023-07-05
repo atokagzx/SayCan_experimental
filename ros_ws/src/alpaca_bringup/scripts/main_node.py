@@ -200,7 +200,7 @@ class MainNode:
                     rospy.loginfo(f'{YELLOW}"done()" action reached{NC}')
                     self._selected_action = "done()"
                     break
-            if selected_action["prob"] < last_prob - 0.6:
+            if last_prob - selected_action["prob"] > 0.6:
                 rospy.loginfo(f"{YELLOW}probability decreased, decided to done(){NC}")
                 self._selected_action = "done(), probability decreased"
                 break

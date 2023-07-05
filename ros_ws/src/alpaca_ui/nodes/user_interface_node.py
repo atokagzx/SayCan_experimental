@@ -93,6 +93,11 @@ class UserInterface:
             except requests.exceptions.ConnectionError as e:
                 rospy.logerr(f"connection error: {e}")
                 sleep(2)
+            except Exception as e:
+                rospy.logerr(f"exception: {e}")
+                rospy.logerr(traceback.format_exc())
+                sleep(2)
+                continue
             # rospy.loginfo(f'got response: {response}')
             else:
                 self._window.status.setText(response.json()['status'])

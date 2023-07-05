@@ -72,5 +72,3 @@ As you see, you should set the order of actions in the way that the robot can pe
 At the end of the work, type "end_of_action_list(stop, don't touch fish, forever)".
 If you want to stop actions, write "end_of_action_list(stop, don't touch fish, forever)".
 Try to use as few actions as possible.
-On the table are: {available_objects}.
-Here is an example of how to 

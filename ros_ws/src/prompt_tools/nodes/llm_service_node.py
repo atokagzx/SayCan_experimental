@@ -56,7 +56,10 @@ class LLMServiceNode:
         monitoring_msg.probabilities = [0.0] * len(self._prompt.actions)
         monitoring_msg.done_actions = self._done_tasks
         self._prompt_monitoring_topic.publish(monitoring_msg)
-        rates = self._rate_actions(self._prompt.body, task, self._prompt.actions)
+        available_objects = self._prompt.pick_names.copy()
+        available_objects.extend(self._prompt.place_names)
+        available_objects = list(set(available_objects))
+        rates = self._rate_actions(self._prompt.body, task, self._prompt.actions, available_objects)
         monitoring_msg = PromptMonitoring()
         monitoring_msg.header.stamp = stamp + rospy.Duration(0.1)
         monitoring_msg.user_prompt = task
@@ -70,11 +73,18 @@ class LLMServiceNode:
         response.done_tasks = self._done_tasks
         return response
     
-    def _rate_actions(self, prompt_body, task, actions):
+    def _rate_actions(self, prompt_body, task, actions, available_objects):
+    
+        # '''
+        # On the table are: {available_objects}.
+        # Here is an example of how to 
+        # '''
         prompt = prompt_body
         # enumerated_done_tasks = [f"{i + 1}. {task}" for i, task in enumerate(self._done_tasks)]
-        prompt += "<|endofprompt|>"
-        prompt += f' {task}:\n'
+        prompt += "\n<|endofprompt|>"
+        available_objects_str = ", ".join(available_objects)
+        prompt += f'On the table are: {available_objects_str}.\n'
+        prompt += f'Here is an example of how to {task}:\n'
         prompt += "\n".join(self._done_tasks) + "\n"
         prompt += "<|endofhistory|>"
         prompt += "<|endofvariant|>".join(actions)

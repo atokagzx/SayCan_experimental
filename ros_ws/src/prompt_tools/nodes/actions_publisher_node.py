@@ -90,7 +90,7 @@ class ActionsPublisherNode:
         message = Prompt()
         message.header.stamp = stamp
         message.header.frame_id = "actions_publisher"
-        message.body = self._base_prompt.format(available_objects=", ".join(self._available_items))
+        message.body = self._base_prompt
         message.actions = list(map(lambda x: x["text"], description))
         message.pick_names = list(map(lambda x: x["pick_obj"], description))
         message.place_names = list(map(lambda x: x["place_obj"], description))
