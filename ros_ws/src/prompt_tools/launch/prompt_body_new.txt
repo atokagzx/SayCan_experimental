@@ -1,0 +1,14 @@
+Write each action as: move A to B.
+Separate actions with a new line.
+Do not repeat the same action twice.
+Try not to use the same block twice.
+At the end of the work, type "end". 
+Here is an example of the task: 
+On the table are red block, green block, blue block, fish, plates.
+Task: place fish on plate
+Plan: 
+move fish to plate
+end
+On the table are: {available_objects}.
+Task: {task}
+Plan:

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(picker)
+project(alpaca_ui)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -50,22 +50,14 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 # Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  Item.msg
-  Circle.msg
-  Box.msg
-  BoxArray.msg
-  CircleArray.msg
-  Prompt.msg
-)
+# add_message_files(
+#   FILES
+# )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  PickConfig.srv
-  PickPlace.srv
-)
+# add_service_files(
+#   FILES
+# )
  
 ## Generate actions in the 'action' folder
 # add_action_files(

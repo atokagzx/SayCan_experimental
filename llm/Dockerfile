@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.0-devel-ubuntu20.04
+FROM nvidia/cuda:11.7.1-devel-ubuntu20.04
 
 # Timezone Configuration
 ENV TZ=Europe/Moscow
@@ -99,7 +99,7 @@ RUN python${PY_VERSION} -m pip install --upgrade numpy \
 RUN python${PY_VERSION} -m pip install --upgrade datasets \
                                                 loralib \
                                                 sentencepiece \
-                                                git+https://github.com/zphang/transformers@c3dc391 \
+                                                git+https://github.com/huggingface/transformers.git \
                                                 git+https://github.com/huggingface/peft.git
                                                 # simple_ai_server
 

@@ -53,3 +53,8 @@ rosrun alpaca_connector monitoring.py # monitoring of robot's ee position to cam
 rosrun alpaca_connector control_gripper.py # control gripper example script
 rosrun alpaca_connector follow_trajectory.py # execute trajectory using robot's ee position to camera frame
 ```
+
+## Tasks examples
+`Match two blocks with plates of the same color`  
+`Make a tower using red and blue blocks`  
+`Put the red block on each plate in turn`

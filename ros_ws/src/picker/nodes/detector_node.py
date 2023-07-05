@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from modules.gsam_detector import GSAMDetector
-from modules.plates_detector import PlateDetector
+from modules.circles_detector import PlateDetector
 from modules.utils import CroppedImage, DrawingUtils
 import rospy
 from picker.msg import Prompt, BoxArray, Box, CircleArray, Circle
@@ -40,12 +40,35 @@ def publish_detected_boxes(items, header, prompt):
             rotated_rect=item.rotated_rect.flatten().tolist(),
             rotated_rect_area=item.rotated_rect_area
         ))
+    boxes_no_mask_list = []
+    for box in boxes_list:
+        boxes_no_mask_list.append(Box(
+            name=box.name,
+            score=box.score,
+            pos=box.pos,
+            area=box.area,
+            additional_names=box.additional_names,
+            bbox=box.bbox,
+            bbox_area=box.bbox_area,
+            angle=box.angle,
+            width=box.width,
+            length=box.length,
+            rotated_rect=box.rotated_rect,
+            rotated_rect_area=box.rotated_rect_area
+        ))
     boxes_publisher.publish(BoxArray(header=rospy.Header(
                                             stamp=header.stamp,
                                             frame_id="gsam_node",
                                         ), 
                                     prompt=prompt,
                                     boxes=boxes_list))
+    boxes_no_mask_publisher.publish(BoxArray(header=rospy.Header(
+                                            stamp=header.stamp,
+                                            frame_id="gsam_node",
+                                        ),
+                                    prompt=prompt,
+                                    boxes=boxes_no_mask_list))
+    
 
 def publish_detected_circles(items, header):
     global image_bridge, circles_publisher
@@ -61,11 +84,27 @@ def publish_detected_circles(items, header):
             additional_names=item.additional_names,
             radius=item.radius
         ))
+    circles_no_mask_list = []
+    for circle in circles_list:
+        circles_no_mask_list.append(Circle(
+            name=circle.name,
+            score=circle.score,
+            pos=circle.pos,
+            area=circle.area,
+            additional_names=circle.additional_names,
+            radius=circle.radius
+        ))
     circles_publisher.publish(CircleArray(header=rospy.Header(
                                             stamp=header.stamp,
                                             frame_id="gsam_node",
                                         ), 
                                     circles=circles_list))
+    circles_no_mask_publisher.publish(CircleArray(header=rospy.Header(
+                                            stamp=header.stamp, 
+                                            frame_id="gsam_node",
+                                        ),
+                                    circles=circles_no_mask_list))
+    
 def publish_images(color, depth_map, _camera_info, header):
     global image_bridge, color_publisher, depth_publisher, camera_info_publisher
     image_depth = image_bridge.cv2_to_imgmsg(depth_map, encoding="passthrough")
@@ -97,6 +136,32 @@ def publish_images(color, depth_map, _camera_info, header):
         roi=_camera_info.roi
     ))
 
+def filter_outer_boxes(boxes, bounds=((350, 20),
+                                        (1600, 20),
+                                        (1600, 850),
+                                        (350, 850))):
+    if len(boxes) == 0:
+        return boxes
+    mask = np.zeros((boxes[0].mask.shape[0], boxes[0].mask.shape[1]), dtype=np.uint8)
+    # draw the outer bounds as trapazoid
+    cv2.fillPoly(mask, np.array([bounds], dtype=np.int32), 255)
+    mask = cv2.bitwise_not(mask)
+    for box in boxes:
+        intersection = cv2.bitwise_and(box.mask, box.mask, mask=mask)
+        if np.sum(intersection) > 0:
+            box.score = 0
+    filtered_boxes = list(filter(lambda box: box.score > 0, boxes))
+    return filtered_boxes
+
+def filter_out_low_score_fish(boxes, threshold=0.4):
+    """Filter out boxes that are below the threshold
+    @param boxes: list of boxes
+    @param threshold: threshold to filter out boxes
+    @return: list of boxes that are above the threshold
+    """
+    filtered_boxes = list(filter(lambda box: box.score > threshold or box.name != "fish", boxes))
+    return filtered_boxes
+
 def filter_plates_from_boxes(boxes, plates):
     """Filter out boxes that are already detected as plates
     @param boxes: list of boxes
@@ -111,8 +176,21 @@ def filter_plates_from_boxes(boxes, plates):
     filtered_boxes = list(filter(lambda box: box.score > 0, boxes))
     return filtered_boxes
 
+def compose_blocks(boxes):
+    sinonim_names = {
+        "fish": [],
+        "block": ["square", "rectangle", "cube", "box", "small block"],
+    }
+    for box in boxes:
+        for original_name, sinonim_list in sinonim_names.items():
+            for sinonim in sinonim_list:
+                if sinonim in box.name:
+                    # replace the name with the original name
+                    box.name = box.name.replace(sinonim, original_name)
+    return boxes
+
 if __name__ == "__main__":
-    ac.init_node("gsam_node")
+    ac.init_node("detector_node")
     names_to_detect_list = list(rospy.get_param("/alpaca/names_to_detect", "").split(";"))
     debug_mode = rospy.get_param("~debug", False)
     names_to_detect = Prompt(header=rospy.Header(
@@ -129,26 +207,48 @@ if __name__ == "__main__":
     rospy.Subscriber("/alpaca/names_to_detect", Prompt, set_names_to_detect)
     boxes_publisher = rospy.Publisher("/alpaca/detector/boxes", BoxArray, queue_size=1, latch=False)
     circles_publisher = rospy.Publisher("/alpaca/detector/circles", CircleArray, queue_size=1, latch=False)
+    boxes_no_mask_publisher = rospy.Publisher("/alpaca/detector/boxes_no_mask", BoxArray, queue_size=1, latch=False)
+    circles_no_mask_publisher = rospy.Publisher("/alpaca/detector/circles_no_mask", CircleArray, queue_size=1, latch=False)
     color_publisher = rospy.Publisher("/alpaca/detector/camera/color", Image, queue_size=1, latch=False)
     depth_publisher = rospy.Publisher("/alpaca/detector/camera/aligned_depth", Image, queue_size=1, latch=False)
     camera_info_publisher = rospy.Publisher("/alpaca/detector/camera/camera_info", CameraInfo, queue_size=1, latch=False)
     masked_frame_publisher = rospy.Publisher("/alpaca/detector/camera/detected", Image, queue_size=1, latch=False)
+    crop_frame = (330, 30, 1600, 880)
+    filter_out_trapezoid = ((350, 20),
+                            (1600, 20),
+                            (1600, 850),
+                            (350, 850))
     while not ac.is_shutdown():
         if ac.is_image_ready():
             detecting_names = names_to_detect
             color, depth_map, _camera_info, header = ac.pop_image(add_header=True)
             if len(detecting_names.names):
-                crop = CroppedImage(color, [330, 0, 1600, 1080])
+                crop = CroppedImage(color, list(crop_frame))
+                # if debug_mode:
+                #     cv2.imshow("crop", crop())
+                #     if cv2.waitKey(1) & 0xFF == ord('q'):
+                #         break
                 boxes = boxes_detector.get_items(crop(), detecting_names.names)
                 boxes = crop.coords_transform(boxes)
-                circles = plate_detector.detect(color)
+                circles = plate_detector.detect(crop())
+                circles = crop.coords_transform(circles)
                 boxes = filter_plates_from_boxes(boxes, circles)
                 boxes = GSAMDetector.filter_same_items(boxes)
+                boxes = compose_blocks(boxes)
+                boxes = filter_out_low_score_fish(boxes)
+                boxes = filter_outer_boxes(boxes, filter_out_trapezoid)
                 publish_detected_boxes(boxes, header, detecting_names)
                 publish_detected_circles(circles, header)
                 publish_images(color, depth_map, _camera_info, header)
                 if debug_mode or masked_frame_publisher.get_num_connections():
                     masked_frame = color.copy()
+                    # add weighted cropped zone
+                    crop_mask = np.full_like(masked_frame, (255, 0, 255))
+                    trapezoid_mask = np.full_like(masked_frame, (0, 255, 255))
+                    cv2.rectangle(crop_mask, (crop._crop_box[:2]), (crop._crop_box[2:]), (0, 0, 0), -1)
+                    cv2.fillConvexPoly(trapezoid_mask, np.array(filter_out_trapezoid), (0, 0, 0))
+                    masked_frame = cv2.addWeighted(masked_frame, 1, crop_mask, 0.3, 0)
+                    masked_frame = cv2.addWeighted(masked_frame, 1, trapezoid_mask, 0.3, 0)
                     masked_frame = DrawingUtils.draw_plates(masked_frame, circles)
                     for item in boxes:
                         masked_frame = DrawingUtils.draw_box_info(masked_frame, item)

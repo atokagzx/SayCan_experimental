@@ -44,8 +44,8 @@ class GSAMDetector:
                 gd_ckpt_filenmae = "groundingdino_swinb_cogcoor.pth",
                 gd_ckpt_config_filename = "GroundingDINO_SwinB.cfg.py",
                 sam_checkpoint="/workspace/weights/sam_vit_h_4b8939.pth",
-                text_threshold = 0.15,
-                box_threshold = 0.15
+                text_threshold = 0.05,
+                box_threshold = 0.05
                 ):
         self._device = device
         self._load_models(gd_ckpt_repo_id, gd_ckpt_filenmae, gd_ckpt_config_filename, sam_checkpoint)

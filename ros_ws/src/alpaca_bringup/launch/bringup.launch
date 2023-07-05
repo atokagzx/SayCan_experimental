@@ -1,12 +1,11 @@
 
 <launch>
-  <!-- <rosparam>
+    <rosparam>
       /camera/motion_module/global_time_enabled: true
       /camera/l500_depth_sensor/global_time_enabled: true
       /camera/rgb_camera/global_time_enabled: true
-  </rosparam> -->
-  
-    <param name="/alpaca/names_to_detect" type="str" value="|color| block"/> 
+    </rosparam>
+    <param name="/alpaca/names_to_detect" type="str" value="|color| block;fish;|color| square;|color| box;|color| rectangle;|color| cube;|color| small block"/> 
     <include file="$(find alpaca_bringup)/launch/robot_driver.launch" >
             <arg name="use_gripper" value="true"/>
             <arg name="fake" value="false"/>
@@ -28,5 +27,6 @@
 
     <node name="alpaca_control_node"  pkg="alpaca_bringup" type="alpaca_control_node.py" output="screen" respawn="true">
     </node>
-    
+    <include file="$(find alpaca_bringup)/launch/picking.launch">
+    </include>
 </launch>

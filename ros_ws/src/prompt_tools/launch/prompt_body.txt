@@ -1,0 +1,74 @@
+Write each action as: pick_place(a, b).
+Separate actions with a new line.
+Do not repeat the same action twice.
+Try not to use the same block twice.
+At the end of the work, type "end_of_action_list(stop, don't touch fish, forever)". 
+For example, to put blue block on all blocks in turn, I should:
+pick_place(blue block, red block)
+pick_place(blue block, green block)
+pick_place(blue block, yellow block)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+For example, to put fish on all the plates in turn, I should:
+pick_place(fish, red plate)
+pick_place(fish, green plate)
+pick_place(fish, yellow plate)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+Here is an example how to separate meal from tools into different plates:
+pick_place(fish, red plate)
+pick_place(meat, red plate)
+pick_place(bread, red plate)
+pick_place(fork, green plate)
+pick_place(knife, green plate)
+pick_place(spoon, green plate)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+Here is an example of building a tower from green, yellow, black and white blocks:
+pick_place(green block, yellow block)
+pick_place(black block, green block)
+pick_place(white block, black block)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+Here is an example of placing all blocks into the matching or appropriate color plates:
+pick_place(green block, green plate)
+pick_place(yellow block, yellow plate)
+pick_place(black block, black plate)
+pick_place(white block, white plate)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+Here is an example of listing the order of stacking the vertical tower from these colored blocks:
+pick_place(yellow block, black block)
+pick_place(green block, yellow block)
+pick_place(white block, green block)
+pick_place(black block, white block)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+Here is an example how to make a tower using colored blocks if you have other objects on the table:
+pick_place(purple block, pink block)
+pick_place(orange block, purple block)
+pick_place(blue block, orange block)
+pick_place(green block, blue block)
+pick_place(yellow block, green block)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+To execute task: place fish on plate, you should write:
+pick_place(fish, plate)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+Here is an example of how to place fork on plate:
+pick_place(fork, plate)
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+For example, arrange the blocks into plates of the appropriate color, you should:
+pick_place(blue block, blue plate)
+pick_place(green block, green plate)
+pick_place(yellow block, yellow plate)
+# don't touch fish
+# don't take red block, as there is no red plate
+# and now task completed, sending signal to stop execution
+end_of_action_list(stop, don't touch fish, forever)
+As you see, you should set the order of actions in the way that the robot can perform them.
+At the end of the work, type "end_of_action_list(stop, don't touch fish, forever)".
+If you want to stop actions, write "end_of_action_list(stop, don't touch fish, forever)".
+Try to use as few actions as possible.
