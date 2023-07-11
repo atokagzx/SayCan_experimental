@@ -172,8 +172,12 @@ RUN pip3 install --ignore-installed flask flask-cors flask-restful flask-socketi
 RUN pip3 install --upgrade jax
 # ENV PATH="/usr/local/cuda-12.1/bin:$PATH"
 # ENV LD_LIBRARY_PATH="/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH"
+RUN apt update && apt install -y python3-pyaudio alsa-base alsa-utils pulseaudio
 ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_connector/:/workspace/modules/vild/:/Grounded-Segment-Anything/"
 WORKDIR /
 RUN /bin/bash -c 'echo "source /opt/ros/noetic/setup.bash; source /workspace/ros_ws/devel/setup.bash --extend"  >> ~/.bashrc'
 WORKDIR /workspace
+RUN echo 'alias bringup="roslaunch alpaca_bringup bringup.launch"' >> ~/.bashrc
+RUN echo 'alias agui="rosrun alpaca_ui user_interface_node.py"' >> ~/.bashrc
+# RUN echo 'alias speech="/workspace/speech/recognizer.py"' >> ~/.bashrc
 ENTRYPOINT /bin/bash -c 'source /opt/ros/noetic/setup.bash && cd /workspace/ros_ws && catkin_make && source /workspace/ros_ws/devel/setup.bash --extend && cd .. && pip3 install /GroundingDINO && /bin/bash'

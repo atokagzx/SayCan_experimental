@@ -78,7 +78,9 @@ class TokenUpdater:
                     headers={'Authorization' : f"Basic {self._speech_auth_token}",
                             'RqUID': str(uuid.uuid4()),
                             'Content-Type': 'application/x-www-form-urlencoded'},
-                        data={'scope': 'SALUTE_SPEECH_CORP'})
+                        data={'scope': 'SALUTE_SPEECH_CORP'},
+                        verify=False
+                        )
                     resp.raise_for_status()
                     resp = resp.json()
                 except requests.HTTPError as e:
