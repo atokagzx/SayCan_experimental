@@ -37,10 +37,25 @@ This command wil bring up the camera node, robot node and tf broadcaster node. R
 Default path to the calibration file is:`/workspace/config/camera_pos.yaml`
 
 ## Bringing up
-To bringup the project, you need to run the following commands in terminal:
+To bringup the project, you need to run the following commands in terminal:  
+**[Docker] Terminal 1:**
 ```bash
-roslaunch alpaca_bringup bringup.launch
+bringup # same as roslaunch alpaca_bringup bringup.launch
 ```
+**[Docker] Terminal 2:**
+```bash
+agui # same as rosrun alpaca_ui user_interface_node.py
+```
+**[Host] Terminal 3:**
+```bash
+./speech/recognizer.py
+```
+**[Host] Terminal 4:**
+```bash
+cd llm
+docker compose up
+```
+
 This command will start all the necessary nodes for the project. Including:
 - **UR5 controller** - *MoveIt!* node for robot motion
 - **Alpaca controller** - *Alpaca control* node provides the main logic of the stand control
