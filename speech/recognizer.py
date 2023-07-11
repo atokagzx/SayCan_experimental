@@ -22,6 +22,9 @@ import google.protobuf as pb
 
 CHUNK_SIZE = 2048
 
+path = os.path.dirname(os.path.abspath(__file__))
+ca_path = os.path.join(path, 'russian_trusted_root_ca_pem.crt')
+
 class SpeechRecognizer:
     recognition_options = {
         'audio_encoding': recognition_pb2.RecognitionOptions.PCM_S16LE,
@@ -112,7 +115,7 @@ if __name__ == '__main__':
     folder_id = os.environ['FOLDER_ID']
     token_updater = TokenUpdater(speech_auth_token, oauth_token)    
     translator = Translator(folder_id, token_updater)
-    recognizer = SpeechRecognizer(token_updater, ca='russian_trusted_root_ca_pem.crt')
+    recognizer = SpeechRecognizer(token_updater, ca=ca_path)
     speech_processor = SpeechProcessor(translator)
     while True:
         try:
