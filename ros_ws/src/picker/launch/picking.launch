@@ -5,4 +5,6 @@
     <node
         name="pick_place_skill_node"  pkg="picker" type="pick_place_node.py" output="screen" respawn="true">
     </node>
+    <include file="$(find picker)/launch/detection.launch">
+    </include>
 </launch>

@@ -54,7 +54,8 @@ class Point6D:
         return pose
 
     def __str__(self):
-        return "Point6D:\n\tx: {:.6f}...\n\ty: {:.6f}...\n\tz: {:.6f}...\n\troll: {:.6f}...\n\tpitch: {:.6f}...\n\tyaw: {:.6f}...".format(self.x, self.y, self.z, self.roll, self.pitch, self.yaw)
+        return "Point6D:\n\tx: {:.6f}...\n\ty: {:.6f}...\n\tz: {:.6f}...\n\troll: {:.6f}...\n\tpitch: {:.6f}...\n\tyaw: {:.6f}..."\
+            .format(self.x, self.y, self.z, self.roll, self.pitch, self.yaw)
     
     def __repr__(self):
         return str(self)
@@ -185,7 +186,7 @@ def _gripper_srv_proxies_init():
     #wait for services
     try:
         for srv_name in [open_service_name, close_service_name]:
-            rospy.wait_for_service(srv_name, timeout=5)
+            rospy.wait_for_service(srv_name, timeout=20)
     except rospy.ROSException as e:
         rospy.logerr("gripper services not found: {}".format(e))
     else:
