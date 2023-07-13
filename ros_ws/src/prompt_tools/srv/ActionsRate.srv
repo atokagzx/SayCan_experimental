@@ -1,0 +1,5 @@
+time stamp # timestamp to find the time of the task
+string task
+---
+Prompt rated_actions
+string[] done_tasks

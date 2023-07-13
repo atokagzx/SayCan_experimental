@@ -1,0 +1,48 @@
+<launch>
+    <arg name="robot_description_file" default="$(find ur_description)/launch/load_ur5.launch"/>
+    <arg name="robot_ip" default="192.168.0.105" />
+    <arg name="reverse_port" default="50001" />
+    <arg name="use_rviz" default="true"/>
+    <arg name="fake" default="false"/>
+    <arg name="use_gripper" default="true"/>
+    <arg name="rviz_config" default="$(find alpaca_bringup)/rviz/bringup.rviz"/>
+
+
+    <include unless="$(arg fake)"
+        file="$(find ur_robot_driver)/launch/ur5_bringup.launch">
+        <arg name="robot_description_file" value="$(arg robot_description_file)"/>
+        <arg name="robot_ip" value="$(arg robot_ip)"/>
+        <arg name="reverse_port" value="$(arg reverse_port)"/>
+    </include>
+    <include unless="$(arg fake)"
+        file="$(find alpaca_moveit_config)/launch/move_group.launch">
+        <arg name="allow_trajectory_execution" value="true"/>
+        <arg name="fake_execution" value="false"/>
+        <arg name="info" value="true"/>
+        <arg name="debug" value="False"/>
+        <arg name="pipeline" value="ompl"/>
+        <arg name="load_robot_description" value="true"/>
+    </include>
+    <include if="$(arg fake)"
+        file="$(find alpaca_moveit_config)/launch/move_group.launch">
+        <arg name="allow_trajectory_execution" value="true"/>
+        <arg name="fake_execution" value="true"/>
+        <arg name="info" value="true"/>
+        <arg name="debug" value="False"/>
+        <arg name="pipeline" value="ompl"/>
+        <arg name="load_robot_description" value="true"/>
+    </include>
+
+    <include if="$(arg use_rviz)"
+        file="$(find alpaca_moveit_config)/launch/moveit_rviz.launch">
+        <arg name="config" value="$(arg rviz_config)"/>
+    </include>
+    
+    <node if="$(arg use_gripper)"
+        name="wsg_50_driver"  pkg="wsg_50_driver" type="wsg_50_ip" output="screen" respawn="true">
+        <param name="ip" type="string" value="192.168.0.111"/>
+        <param name="port" type="int" value="1000"/>
+        <param name="protocol" type="string" value="tcp"/>
+        <param name="com_mode" type="string" value="polling"/>
+    </node>
+</launch>

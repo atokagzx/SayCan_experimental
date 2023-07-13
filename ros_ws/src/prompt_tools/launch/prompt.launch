@@ -1,0 +1,10 @@
+
+<launch>
+    <node name="actions_publisher_node"  pkg="prompt_tools" type="actions_publisher_node.py" output="screen" respawn="true">
+        <param name="available_items" type="str" value="red block;green block;yellow block;blue block;yellow plate;green plate;blue plate;fish"/>
+        <param name="base_prompt" type="str"  command="cat $(find prompt_tools)/launch/prompt_body.txt"/>
+        <param name="action_template" type="str"  command="cat $(find prompt_tools)/launch/action_template.txt"/>
+    </node>
+    <node name="llm_service_node"  pkg="prompt_tools" type="llm_service_node.py" output="screen" respawn="true"/>
+    
+</launch>

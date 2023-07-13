@@ -1,0 +1,50 @@
+
+<launch>
+    <param name="prompt" 
+        type="bool"
+        value="true"
+    />
+    <param name="/alpaca/names_to_detect" 
+        type="str" 
+        value="|color| block;fish;|color| square;|color| box;|color| rectangle;|color| cube;|color| small block"
+    /> 
+    <include file="$(find alpaca_bringup)/launch/robot_driver.launch" >
+            <arg name="use_gripper" value="true"/>
+            <arg name="fake" value="false"/>
+            <arg name="use_rviz" value="true"/>
+            <arg name="rviz_config" value="$(find alpaca_bringup)/rviz/bringup.rviz"/>
+    </include>
+    <!--  launch realsense -->
+    <include file="$(find alpaca_bringup)/launch/realsense.launch" >
+        <arg name="output"              value="screen"/>
+        <arg name="filters"             value="decimation, disparity, spatial, temporal, disparity, hole_filling"/> 
+        <arg name="respawn"             value="true"/>
+        <arg name="enable_gyro"         value="false"/>
+        <arg name="enable_accel"        value="false"/>
+        <arg name="tf_prefix"           value="camera"/>
+        <arg name="publish_tf"          value="false"/>
+        <arg name="tf_publish_rate"     value="0"/>
+    </include>
+    <include file='$(find alpaca_bringup)/launch/camera_pose.launch' />
+
+    <node 
+        name="alpaca_control_node" 
+        pkg="alpaca_bringup"
+        type="alpaca_control_node.py" 
+        output="screen" 
+        respawn="true">
+    </node>
+    <include 
+        file="$(find picker)/launch/picking.launch">
+    </include>
+    <include if="$(arg prompt)"
+        file="$(find prompt_tools)/launch/prompt.launch">
+    </include>
+    <node 
+        name="alpaca_main_node" 
+        pkg="alpaca_bringup"
+        type="main_node.py" 
+        output="screen" 
+        respawn="true">
+    </node>
+</launch>

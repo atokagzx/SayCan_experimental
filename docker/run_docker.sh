@@ -11,10 +11,18 @@ docker run -ti --rm \
       -e "QT_X11_NO_MITSHM=1" \
       -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
       -e XAUTHORITY \
-      -e OPENAI_KEY="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" \
+      -e OPENAI_KEY=$OPENAI_KEY \
+      -e ROS_MASTER_URI=$ROS_MASTER_URI \
+      -e ROS_IP=$ROS_IP \
+      -e SPEECH_AUTH_TOKEN=$SPEECH_AUTH_TOKEN \
+      -e FOLDER_ID=$FOLDER_ID \
+      -e OAUTH_TOKEN=$OAUTH_TOKEN \
+      -e ROSCONSOLE_FORMAT="[\${severity}] [\${time:%H:%M:%s}] [\${node}]: \${message}" \
       -v $ROOT_DIR:/workspace \
       -v $ROOT_DIR/cache:/root/.cache \
+      --device /dev/snd \
+      --device /dev/usb \
       --net=host \
       --privileged \
-      --name rt1_exp rt1-img \
+      --name saycan_exp saycan_exp-img \
       bash

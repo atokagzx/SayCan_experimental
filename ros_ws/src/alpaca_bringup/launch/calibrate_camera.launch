@@ -1,0 +1,27 @@
+
+<launch>
+  <!-- <rosparam>
+      /camera/motion_module/global_time_enabled: true
+      /camera/l500_depth_sensor/global_time_enabled: true
+      /camera/rgb_camera/global_time_enabled: true
+  </rosparam> -->
+    <arg name="calib_path" default="/workspace/config/camera_pos.yaml"/> 
+    <include file="$(find alpaca_bringup)/launch/robot_driver.launch" >
+            <arg name="use_gripper" value="true"/>
+            <arg name="fake" value="false"/>
+            <arg name="use_rviz" value="true"/>
+            <arg name="rviz_config" value="$(find alpaca_bringup)/rviz/calibrate.rviz"/>
+    </include>
+    <!--  launch realsense -->
+    <include file="$(find alpaca_bringup)/launch/realsense.launch" >
+        <arg name="output"              value="screen"/>
+        <arg name="respawn"             value="true"/>
+        <arg name="enable_gyro"         value="false"/>
+        <arg name="enable_accel"        value="false"/>
+        <arg name="tf_prefix"           value="camera"/>
+        <arg name="publish_tf"          value="true"/>
+        <arg name="tf_publish_rate"     value="10"/>
+        <!-- <arg name="initial_reset"        value="true"/>     -->
+
+    </include>
+</launch>

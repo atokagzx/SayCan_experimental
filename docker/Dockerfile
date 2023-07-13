@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-runtime-ubuntu20.04
+FROM nvidia/cuda:11.7.1-devel-ubuntu20.04
 
 # Timezone Configuration
 ENV TZ=Europe/Moscow
@@ -33,7 +33,7 @@ RUN dpkg --add-architecture i386 && \
 
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV NVIDIA_REQUIRE_CUDA "cuda>=12.0"
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.0"
 
 
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
@@ -137,7 +137,47 @@ RUN apt update && apt install -y libboost-system1.67.0 libboost-thread1.67.0 lib
                                 ros-noetic-industrial-msgs ros-noetic-industrial-robot-status-controller ros-noetic-force-torque-sensor-controller socat ros-noetic-twist-controller \
                                 ros-noetic-industrial-robot-status-interface ros-noetic-industrial-robot-simulator ros-noetic-velocity-controllers
 
+# GroundingDINO dependencies section    
+RUN pip3 install torchvision \
+                transformers \
+                addict \
+                yapf \
+                timm \
+                supervision==0.6.0
+RUN pip3 install jax==0.4.9
+RUN apt update && apt install -y --allow-downgrades libcudnn8=8.8.1.3-1+cuda11.8 libcudnn8-dev=8.8.1.3-1+cuda11.8
+RUN pip3 install onnxruntime onnx
+RUN pip3 install git+https://github.com/facebookresearch/segment-anything.git
+RUN git clone --recurse-submodules https://github.com/IDEA-Research/Grounded-Segment-Anything.git
+WORKDIR /Grounded-Segment-Anything
+RUN pip3 install -r requirements.txt
+# WORKDIR /Grounded-Segment-Anything/GroundingDINO
+RUN mv /Grounded-Segment-Anything/GroundingDINO /GroundingDINO
+WORKDIR /GroundingDINO
+RUN pip3 install .
+WORKDIR /
+RUN pip3 install seaborn
+RUN apt update && apt install -y ros-noetic-moveit-visual-tools \
+                                ros-noetic-handeye \
+                                ros-noetic-criutils \
+                                ros-noetic-baldor \
+                                ros-noetic-rosunit \
+                                ros-noetic-tf2-eigen \
+                                ros-noetic-tf2-geometry-msgs \
+                                libjsoncpp-dev \
+                                libopencv-dev
 
+RUN apt update && apt install -y python3-numpy python-numpy
+RUN pip3 install --ignore-installed flask flask-cors flask-restful flask-socketio 
+RUN pip3 install --upgrade jax
+# ENV PATH="/usr/local/cuda-12.1/bin:$PATH"
+# ENV LD_LIBRARY_PATH="/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH"
+RUN apt update && apt install -y python3-pyaudio alsa-base alsa-utils pulseaudio
+ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_connector/:/workspace/modules/vild/:/Grounded-Segment-Anything/"
+WORKDIR /
 RUN /bin/bash -c 'echo "source /opt/ros/noetic/setup.bash; source /workspace/ros_ws/devel/setup.bash --extend"  >> ~/.bashrc'
 WORKDIR /workspace
-ENTRYPOINT /bin/bash -c 'source /opt/ros/noetic/setup.bash && cd /workspace/ros_ws && catkin_make && source /workspace/ros_ws/devel/setup.bash --extend && cd .. && /bin/bash'
+RUN echo 'alias bringup="roslaunch alpaca_bringup bringup.launch"' >> ~/.bashrc
+RUN echo 'alias agui="rosrun alpaca_ui user_interface_node.py"' >> ~/.bashrc
+# RUN echo 'alias speech="/workspace/speech/recognizer.py"' >> ~/.bashrc
+ENTRYPOINT /bin/bash -c 'source /opt/ros/noetic/setup.bash && cd /workspace/ros_ws && catkin_make && source /workspace/ros_ws/devel/setup.bash --extend && cd .. && pip3 install /GroundingDINO && /bin/bash'
