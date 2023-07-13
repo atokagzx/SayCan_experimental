@@ -24,7 +24,7 @@ pick_place(knife, green plate)
 pick_place(spoon, green plate)
 # and now task completed, sending signal to stop execution
 end_of_action_list(stop, don't touch fish, forever)
-Here is an example of building a tower from green, yellow, black and white blocks:
+Here is an example of assembling a tower from blocks:
 pick_place(green block, yellow block)
 pick_place(black block, green block)
 pick_place(white block, black block)

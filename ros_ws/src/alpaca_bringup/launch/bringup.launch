@@ -1,7 +1,8 @@
 
 <launch>
-    <arg name="prompt" 
-        default="true"
+    <param name="prompt" 
+        type="bool"
+        value="true"
     />
     <param name="/alpaca/names_to_detect" 
         type="str" 
