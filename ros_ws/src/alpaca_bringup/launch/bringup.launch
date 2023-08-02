@@ -1,9 +1,6 @@
 
 <launch>
-    <param name="prompt" 
-        type="bool"
-        value="true"
-    />
+    <arg name="prompt" default="true"/>
     <param name="/alpaca/names_to_detect" 
         type="str" 
         value="|color| block;fish;|color| square;|color| box;|color| rectangle;|color| cube;|color| small block"

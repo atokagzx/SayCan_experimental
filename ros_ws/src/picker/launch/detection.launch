@@ -1,5 +1,6 @@
 <launch>
     <node
         name="detector_node"  pkg="picker" type="detector_node.py" output="screen" respawn="true">
+        <param name="debug" value="true"/>
     </node>
 </launch>

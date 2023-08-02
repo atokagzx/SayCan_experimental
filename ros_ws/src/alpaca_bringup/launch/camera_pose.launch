@@ -3,5 +3,6 @@
        http://wiki.ros.org/geometry2/RotationMethods and https://en.wikipedia.org/wiki/Euler_angles for more info. -->
   <!-- xyz="-0.524916 0.0128984 1.02072" rpy="0.00579798 -3.13875 -1.56265" -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="camera_link_broadcaster"
-      args="-0.524916 0.0128984 1.02072   -0.704222 0.709973 0.00305882 0.00103275 base camera_color_optical_frame" />
+      args="0.526791 -0.0200573 1.03351   0.713945 0.700194 -0.000764237 0.00316384 base_link camera_color_optical_frame" />
+
 </launch>

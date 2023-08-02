@@ -173,6 +173,7 @@ RUN pip3 install --upgrade jax
 # ENV PATH="/usr/local/cuda-12.1/bin:$PATH"
 # ENV LD_LIBRARY_PATH="/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH"
 RUN apt update && apt install -y python3-pyaudio alsa-base alsa-utils pulseaudio
+RUN pip3 install pydantic pandas pycryptodomex python-gnupg
 ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_connector/:/workspace/modules/vild/:/Grounded-Segment-Anything/"
 WORKDIR /
 RUN /bin/bash -c 'echo "source /opt/ros/noetic/setup.bash; source /workspace/ros_ws/devel/setup.bash --extend"  >> ~/.bashrc'
