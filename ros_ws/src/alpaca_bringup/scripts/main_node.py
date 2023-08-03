@@ -21,6 +21,8 @@ from prompt_tools.srv import ActionsRate, ActionsRateRequest, ActionsRateRespons
 from prompt_tools.srv import DoneTask, DoneTaskRequest, DoneTaskResponse
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 from flask import Flask, request, jsonify
+import requests
+from alpaca_logging_tools import log_rosbag
 import threading
 # task = "To make a tower using colored blocks, I should:"
 # task = "To pick red block and place it on all other items one by one, I should:"
@@ -28,7 +30,6 @@ import threading
 # task = "Make a tower from red, blue and green blocks"
 # task = "Put the red block on each plate in turn:"
 task = "Build a tower using colored blocks:"
-
 class MainNode:
     rate_srv_name = "/alpaca/prompt/rate"
     add_done_task_srv_name = "/alpaca/prompt/add_done_task"
@@ -163,7 +164,7 @@ class MainNode:
         done_tasks_text = "\n".join(f"{i}: {task}" for i, task in enumerate(resp.done_tasks))
         rospy.loginfo(f"done tasks:\n{YELLOW}{done_tasks_text}{NC}")
 
-    def run(self, task):
+    def run(self, task, scenario_id=0):
         YELLOW = '\033[0;33m'
         NC = '\033[0m' 
         rospy.loginfo("main node started")
@@ -173,7 +174,17 @@ class MainNode:
         self._force_stop_flag = False
         last_prob = 0
         self._selected_action = ""
+        subtask_id = 1
         while not rospy.is_shutdown():
+            log_data = {
+                'scenario_id': scenario_id,
+                'subtask_id': subtask_id,
+                'success_of_tasks': 0,
+                'scenario_task': task,
+                'planned_subtasks': "",
+                'current_instruction': '',
+            }
+            
             if self._force_stop_flag:
                 rospy.loginfo("force stop flag is set, exiting")
                 break
@@ -185,6 +196,7 @@ class MainNode:
             rate_resp = self._rate_srv(rate_req)
             rospy.loginfo(f"received actions rate, response in {(rospy.Time.now() - stamp) / 1e9} seconds")
             _prompt_body, _done_tasks, actions = self._rated_actions_to_dict(rate_resp)
+            
             if len(actions) == 0:
                 rospy.loginfo("no actions to do")
                 rospy.signal_shutdown("no actions to do")
@@ -210,15 +222,28 @@ class MainNode:
             if self._force_stop_flag:
                 rospy.loginfo("force stop flag is set, exiting")
                 break
-            if not self._only_plan:
-                ret = self._pick_place(selected_action, stamp)
-                if not ret:
-                    continue
-            else:
-                self._add_done_action(selected_action)
-            first_action_flag = False
-            last_prob = selected_action["prob"]
-            rospy.loginfo(f"last probability: {last_prob}")
+            with log_rosbag('http://0.0.0.0:8011', **log_data) as (response, done_req):
+                rospy.loginfo(f"rosbag srv resp:\ncode: {response.status_code}\ntext: {response.text}")
+                done_req.update({
+                    'planned_subtasks': "\n".join(_done_tasks),
+                    'current_instruction': selected_action["text"]
+                })
+                if not self._only_plan:
+                    ret = self._pick_place(selected_action, stamp)
+                    if not ret:
+                        # task failed
+                        continue
+                    else:
+                        # task succeeded
+                        done_req.update({
+                            'success_of_tasks': 1,
+                        })
+                        subtask_id += 1
+                else:
+                    self._add_done_action(selected_action)
+                first_action_flag = False
+                last_prob = selected_action["prob"]
+                rospy.loginfo(f"last probability: {last_prob}")
 
     def force_stop(self):
         rospy.loginfo("force stopping")
@@ -237,20 +262,21 @@ class RESTService:
         self._app.add_url_rule("/force_stop", methods=["POST"], view_func=self._force_stop)
         self._app.add_url_rule("/status", methods=["GET"], view_func=self._status)
 
-    def _run_executor(self, request):
+    def _run_executor(self, task, scenario_id):
         if self._thread is not None:
             if self._thread.is_alive():
                 rospy.loginfo("executor thread is already running")
                 return False, "executor thread is already running"
             self._thread = None
-        self._thread = threading.Thread(target=self._executor.run, daemon=True, name="executor_thread", args=(request,))
+        self._thread = threading.Thread(target=self._executor.run, daemon=True, name="executor_thread", args=(task, scenario_id))
         self._thread.start()
         return True, "OK"
 
     def _execute(self):
         task = request.json["task"]
-        rospy.loginfo(f'received task: "{task}"')
-        ret, msg = self._run_executor(task)
+        scenario_id = request.json["scenario_id"]
+        rospy.loginfo(f'received task: "{task}"\nscenario_id: "{scenario_id}"')
+        ret, msg = self._run_executor(task, scenario_id)
         if ret:
             return msg, 200
         else:
