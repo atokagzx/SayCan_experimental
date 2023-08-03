@@ -251,9 +251,9 @@ _image_header = None
 
 def _camera_init():
     global _color_buffer, _depth_buffer, _color_msg, _depth_msg, _new_msg, _cv_bridge, _camera_info
-    rospy.Subscriber("/camera/color/image_raw", Image, callback=_rs_message_cb, callback_args={"type": "color"}, queue_size=2)
-    rospy.Subscriber("/camera/aligned_depth_to_color/image_raw", Image, callback=_rs_message_cb, callback_args={"type": "depth"}, queue_size=2)
-    rospy.Subscriber("/camera/aligned_depth_to_color/camera_info", CameraInfo, _cam_info_cb)
+    rospy.Subscriber("/sensor/camera/1/color/image_raw", Image, callback=_rs_message_cb, callback_args={"type": "color"}, queue_size=2)
+    rospy.Subscriber("/sensor/camera/1/aligned_depth_to_color/image_raw", Image, callback=_rs_message_cb, callback_args={"type": "depth"}, queue_size=2)
+    rospy.Subscriber("/sensor/camera/1/aligned_depth_to_color/camera_info", CameraInfo, _cam_info_cb)
     rospy.loginfo("subscribed to camera topics")
     
 

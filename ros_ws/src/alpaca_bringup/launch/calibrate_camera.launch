@@ -12,16 +12,26 @@
             <arg name="use_rviz" value="true"/>
             <arg name="rviz_config" value="$(find alpaca_bringup)/rviz/calibrate.rviz"/>
     </include>
-    <!--  launch realsense -->
+    <!--  launch realsense 1-->
     <include file="$(find alpaca_bringup)/launch/realsense.launch" >
         <arg name="output"              value="screen"/>
         <arg name="respawn"             value="true"/>
         <arg name="enable_gyro"         value="false"/>
         <arg name="enable_accel"        value="false"/>
-        <arg name="tf_prefix"           value="camera"/>
         <arg name="publish_tf"          value="true"/>
         <arg name="tf_publish_rate"     value="10"/>
-        <!-- <arg name="initial_reset"        value="true"/>     -->
-
+        <arg name="serial_no"           value="f1320411"/>
+        <arg name="camera"              value="/sensor/camera/1/"/>
     </include>
+    <!--  launch realsense 2 -->
+    <!-- <include file="$(find alpaca_bringup)/launch/realsense.launch" >
+        <arg name="output"              value="screen"/>
+        <arg name="respawn"             value="true"/>
+        <arg name="enable_gyro"         value="false"/>
+        <arg name="enable_accel"        value="false"/>
+        <arg name="publish_tf"          value="true"/>
+        <arg name="tf_publish_rate"     value="10"/>
+        <arg name="serial_no"           value="912112070049"/>
+        <arg name="camera"              value="/sensor/camera/2/"/>
+    </include> -->
 </launch>
