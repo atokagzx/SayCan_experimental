@@ -70,8 +70,10 @@ class UserInterface:
     
     def _on_prompt_confirm(self):
         rospy.loginfo('prompt confirmed')
+        scenario_id = int(self._window.scenarioIDSpin.value())
         self._window.promptConfirm.setEnabled(False)
-        request = requests.post('http://localhost:5225/execute', json={'task': self._user_task})
+        request = requests.post('http://localhost:5225/execute', json={'task': self._user_task, 'scenario_id': scenario_id})
+        self._window.scenarioIDSpin.setValue(scenario_id + 1)
 
     def _on_prompt_reject(self):
         rospy.loginfo('prompt rejected')

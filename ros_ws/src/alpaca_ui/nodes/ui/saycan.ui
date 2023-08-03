@@ -231,6 +231,40 @@
      <set>QDialogButtonBox::Cancel</set>
     </property>
    </widget>
+   <widget class="QSpinBox" name="scenarioIDSpin">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>660</y>
+      <width>71</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>1</number>
+    </property>
+    <property name="maximum">
+     <number>199</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="statusLabel_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>650</y>
+      <width>151</width>
+      <height>50</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>scenario_id:</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
