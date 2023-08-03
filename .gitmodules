@@ -16,3 +16,9 @@
 [submodule "ros_ws/src/moveit_calibration"]
 	path = ros_ws/src/moveit_calibration
 	url = https://github.com/ros-planning/moveit_calibration.git
+[submodule "ros_ws/src/alpaca_logging/arm_msgs"]
+	path = ros_ws/src/alpaca_logging/arm_msgs
+	url = git@github.com:atokagzx/arm_msgs.git
+[submodule "ros_ws/src/alpaca_logging/alpaca_logging_tools"]
+	path = ros_ws/src/alpaca_logging/alpaca_logging_tools
+	url = git@github.com:atokagzx/alpaca_logging_tools.git

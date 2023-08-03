@@ -180,5 +180,6 @@ RUN /bin/bash -c 'echo "source /opt/ros/noetic/setup.bash; source /workspace/ros
 WORKDIR /workspace
 RUN echo 'alias bringup="roslaunch alpaca_bringup bringup.launch"' >> ~/.bashrc
 RUN echo 'alias agui="rosrun alpaca_ui user_interface_node.py"' >> ~/.bashrc
+ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_logging/alpaca_logging_tools/"
 # RUN echo 'alias speech="/workspace/speech/recognizer.py"' >> ~/.bashrc
 ENTRYPOINT /bin/bash -c 'source /opt/ros/noetic/setup.bash && cd /workspace/ros_ws && catkin_make && source /workspace/ros_ws/devel/setup.bash --extend && cd .. && pip3 install /GroundingDINO && /bin/bash'
