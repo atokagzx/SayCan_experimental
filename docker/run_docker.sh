@@ -20,6 +20,7 @@ docker run -ti --rm \
       -e ROSCONSOLE_FORMAT="[\${severity}] [\${time:%H:%M:%s}] [\${node}]: \${message}" \
       -v $ROOT_DIR:/workspace \
       -v $ROOT_DIR/cache:/root/.cache \
+      -v $ROOT_DIR/ros_ws/src/ds4drv/udev/50-ds4drv.rules:/etc/udev/rules.d/50-ds4drv.rules \
       --device /dev/snd \
       --device /dev/usb \
       --net=host \

@@ -1,6 +1,6 @@
 [submodule "ros_ws/src/Universal_Robots_ROS_Driver"]
 	path = ros_ws/src/Universal_Robots_ROS_Driver
-	url = https://github.com/UniversalRobots/Universal_Robots_ROS_Driver.git
+	url = git@github.com:atokagzx/Universal_Robots_ROS_Driver.git
 [submodule "ros_ws/src/universal_robot"]
 	path = ros_ws/src/universal_robot
 	url = https://github.com/ros-industrial/universal_robot.git
@@ -22,3 +22,12 @@
 [submodule "ros_ws/src/alpaca_logging/alpaca_logging_tools"]
 	path = ros_ws/src/alpaca_logging/alpaca_logging_tools
 	url = git@github.com:atokagzx/alpaca_logging_tools.git
+[submodule "ros_ws/src/ds4drv"]
+	path = ros_ws/src/ds4drv
+	url = https://github.com/naoki-mizuno/ds4drv
+[submodule "ros_ws/src/ds4_driver"]
+	path = ros_ws/src/ds4_driver
+	url = https://github.com/naoki-mizuno/ds4_driver.git
+[submodule "ros_ws/src/alpaca_logging/alpaca_joy"]
+	path = ros_ws/src/alpaca_logging/alpaca_joy
+	url = git@github.com:atokagzx/alpaca_joy.git

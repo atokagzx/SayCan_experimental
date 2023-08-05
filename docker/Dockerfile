@@ -174,12 +174,14 @@ RUN pip3 install --upgrade jax
 # ENV LD_LIBRARY_PATH="/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH"
 RUN apt update && apt install -y python3-pyaudio alsa-base alsa-utils pulseaudio
 RUN pip3 install pydantic pandas pycryptodomex python-gnupg
+RUN apt update && apt install -y ros-noetic-joy ros-noetic-imu-transformer ros-noetic-imu-tools
+RUN pip3 install pyudev evdev
 ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_connector/:/workspace/modules/vild/:/Grounded-Segment-Anything/"
 WORKDIR /
 RUN /bin/bash -c 'echo "source /opt/ros/noetic/setup.bash; source /workspace/ros_ws/devel/setup.bash --extend"  >> ~/.bashrc'
 WORKDIR /workspace
 RUN echo 'alias bringup="roslaunch alpaca_bringup bringup.launch"' >> ~/.bashrc
 RUN echo 'alias agui="rosrun alpaca_ui user_interface_node.py"' >> ~/.bashrc
-ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_logging/alpaca_logging_tools/"
+ENV PYTHONPATH "${PYTHONPATH}:/workspace/ros_ws/src/alpaca_logging/alpaca_logging_tools/:/workspace/ros_ws/src/ds4drv/"
 # RUN echo 'alias speech="/workspace/speech/recognizer.py"' >> ~/.bashrc
 ENTRYPOINT /bin/bash -c 'source /opt/ros/noetic/setup.bash && cd /workspace/ros_ws && catkin_make && source /workspace/ros_ws/devel/setup.bash --extend && cd .. && pip3 install /GroundingDINO && /bin/bash'
