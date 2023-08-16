@@ -6,8 +6,10 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /TF1/Tree1
+        - /HandEyeCalibration2
+        - /HandEyeCalibration2/Status1
       Splitter Ratio: 0.31976744532585144
-    Tree Height: 384
+    Tree Height: 250
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -315,17 +317,7 @@ Visualization Manager:
           Value: false
         base_link_inertia:
           Value: false
-        camera_aligned_depth_to_color_frame:
-          Value: true
-        camera_color_frame:
-          Value: true
-        camera_color_optical_frame:
-          Value: true
-        camera_depth_frame:
-          Value: true
-        camera_depth_optical_frame:
-          Value: true
-        camera_link:
+        camera_1_color_optical_frame:
           Value: true
         flange:
           Value: false
@@ -393,20 +385,59 @@ Visualization Manager:
                                 wsg_50_gripper_right:
                                   wsg_50_finger_right:
                                     {}
+          camera_1_color_optical_frame:
+            handeye_target:
+              {}
           stand_link:
             {}
-        camera_link:
-          camera_aligned_depth_to_color_frame:
-            {}
-          camera_color_frame:
-            camera_color_optical_frame:
-              handeye_target:
-                {}
-          camera_depth_frame:
-            camera_depth_optical_frame:
-              {}
       Update Interval: 0
       Value: true
+    - ArUco dictionary: DICT_5X5_250
+      Camera FOV Marker:
+        Marker Alpha: 0.30000001192092896
+        Marker Size: 1.5
+        Value: true
+      Class: moveit_rviz_plugin/HandEyeCalibration
+      Enabled: false
+      Move Group Namespace: ""
+      Name: HandEyeCalibration
+      Planning Scene Topic: move_group/monitored_planning_scene
+      Rx: 0
+      Ry: 0
+      Rz: 0
+      Tx: 0
+      Ty: 0
+      Tz: 0
+      Value: false
+      base: base
+      camera_info_topic: ""
+      eef: wsg_50_center
+      group: manipulator
+      image_topic: ""
+      marker border (bits): 1
+      marker separation (px): 20
+      marker size (px): 200
+      markers, X: 3
+      markers, Y: 4
+      measured marker size (m): 0.060000
+      measured separation (m): 0.006000
+      object: tool0_controller
+      sensor: ""
+      sensor_mount_type: 0
+      solver: crigroup/Daniilidis1999
+      target_type: HandEyeTarget/Aruco
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /sensor/camera/2/color/image_raw
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
     - ArUco dictionary: DICT_5X5_250
       Camera FOV Marker:
         Marker Alpha: 0.30000001192092896
@@ -424,23 +455,35 @@ Visualization Manager:
       Ty: 0
       Tz: 0
       Value: true
-      base: ""
-      camera_info_topic: /camera/color/camera_info
+      base: base_link
+      camera_info_topic: /sensor/camera/1/color/camera_info
       eef: wsg_50_center
       group: manipulator
-      image_topic: /camera/color/image_raw
+      image_topic: /sensor/camera/1/color/image_raw
       marker border (bits): 1
       marker separation (px): 20
       marker size (px): 200
       markers, X: 3
       markers, Y: 4
-      measured marker size (m): 0.06
+      measured marker size (m): 0.060000
       measured separation (m): 0.006000
       object: handeye_target
-      sensor: camera_color_optical_frame
+      sensor: camera_1_color_optical_frame
       sensor_mount_type: 0
       solver: crigroup/Daniilidis1999
       target_type: HandEyeTarget/Aruco
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /handeye_calibration/target_detection
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -487,11 +530,13 @@ Window Geometry:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
+  Image:
+    collapsed: false
   MotionPlanning:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000035e000003a2fc020000000cfb000000100044006900730070006c006100790073010000003b000001bb000000c700fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670000000128000002b50000016a00fffffffb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e0000000154000001e10000000000000000fb0000000a0049006d00610067006500000001d4000002090000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e1000001e100ffffff000003d2000003a200000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000001000000000000035e000003a2fc020000000efc0000003b00000150000000e20100001afa000000010100000003fb000000100044006900730070006c00610079007301000000000000035e0000015600fffffffb0000000a0049006d0061006700650100000000ffffffff0000005a00fffffffb0000000a0049006d0061006700650000000000ffffffff0000005a00fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670000000128000002b50000016900fffffffb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e0000000154000001e1000001e100fffffffb0000000a0049006d00610067006500000001d4000002090000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001910000024c0000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001910000024c000001e100ffffff000003d2000003a200000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1846
