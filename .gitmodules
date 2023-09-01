@@ -31,3 +31,9 @@
 [submodule "ros_ws/src/alpaca_logging/alpaca_joy"]
 	path = ros_ws/src/alpaca_logging/alpaca_joy
 	url = git@github.com:atokagzx/alpaca_joy.git
+[submodule "ros_ws/src/dualshock_teleop"]
+	path = ros_ws/src/dualshock_teleop
+	url = git@git.sberrobots.ru:manipulation-foundation/perception/dualshock_teleop.git
+[submodule "ros_ws/src/ocam"]
+	path = ros_ws/src/ocam
+	url = https://github.com/AerialRobotics-IITK/ocam.git
