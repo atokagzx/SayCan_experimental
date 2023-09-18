@@ -1,0 +1,19 @@
+<launch>
+    <include file="$(find alpaca_bringup)/launch/robot_driver.launch" >
+        <arg name="use_gripper"         value="true"/>
+        <arg name="fake"                value="false"/>
+        <arg name="use_rviz"            value="true"/>
+        <arg name="rviz_config"         value="$(find alpaca_bringup)/rviz/skild.rviz"/>
+    </include>
+    <include file="$(find alpaca_bringup)/launch/realsense_3.launch" />
+    
+    <include file='$(find skild)/launch/skild_aruco.launch'>
+        <arg name="image_topic"        value="/sensor/camera/3/color/image_raw" />
+        <arg name="camera_info_topic"   value="/sensor/camera/3/color/camera_info" />
+        <arg name="camera_frame"        value="camera_3_color_optical_frame" />
+        <arg name="show_img"            value="false" />
+        <arg name="marker_id"           value="14" />
+        <arg name="marker_size"         value="0.099" />
+        <arg name="marker_frame"        value="marker_link"/>
+    </include>
+</launch>

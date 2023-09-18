@@ -315,7 +315,7 @@ Visualization Manager:
           Value: false
         base_link_inertia:
           Value: false
-        camera_color_optical_frame:
+        camera_1_color_optical_frame:
           Value: true
         flange:
           Value: false
@@ -360,7 +360,7 @@ Visualization Manager:
       Tree:
         base_link:
           base:
-            camera_color_optical_frame:
+            camera_1_color_optical_frame:
               {}
             tool0_controller:
               {}

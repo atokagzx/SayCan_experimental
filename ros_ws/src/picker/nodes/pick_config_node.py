@@ -196,7 +196,6 @@ class PickerConfig:
         center = item.pos
         footprint_mask = np.zeros([self.color_image.shape[0], self.color_image.shape[1]], dtype=np.uint8)
         footprint_mask = cv2.circle(footprint_mask, tuple(center.astype(np.int32)), int(self._gripper_footprint_length/2), 255, -1)
-        cv2.imwrite("/workspace/footprint_mask.png", footprint_mask)
         footprint_points = np.argwhere(footprint_mask)[:,:2] # [y, x]
         footprint_points = footprint_points[:, ::-1] # [x, y]
         footprint_points = footprint_points.astype(np.int32)

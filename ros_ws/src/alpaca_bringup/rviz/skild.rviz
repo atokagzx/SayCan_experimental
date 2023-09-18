@@ -6,10 +6,8 @@ Panels:
       Expanded:
         - /TF1/Frames1
         - /TF1/Tree1
-        - /HandEyeCalibration2
-        - /HandEyeCalibration2/Status1
       Splitter Ratio: 0.31976744532585144
-    Tree Height: 250
+    Tree Height: 193
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -52,7 +50,7 @@ Visualization Manager:
       MoveIt_Allow_Sensor_Positioning: false
       MoveIt_Planning_Attempts: 10
       MoveIt_Planning_Time: 5
-      MoveIt_Use_Cartesian_Path: false
+      MoveIt_Use_Cartesian_Path: true
       MoveIt_Use_Constraint_Aware_IK: true
       MoveIt_Workspace:
         Center:
@@ -106,6 +104,11 @@ Visualization Manager:
             Show Trail: false
             Value: true
           stand_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          table_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -246,6 +249,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          table_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           tool0:
             Alpha: 1
             Show Axes: false
@@ -317,7 +325,7 @@ Visualization Manager:
           Value: false
         base_link_inertia:
           Value: false
-        camera_1_color_optical_frame:
+        camera_3_color_optical_frame:
           Value: true
         flange:
           Value: false
@@ -325,16 +333,18 @@ Visualization Manager:
           Value: false
         forearm_link:
           Value: false
-        handeye_target:
+        marker_link:
           Value: true
         shoulder_link:
           Value: false
         stand_link:
           Value: false
+        table_link:
+          Value: true
         tool0:
           Value: false
         tool0_controller:
-          Value: false
+          Value: true
         upper_arm_link:
           Value: false
         wrist_1_link:
@@ -378,103 +388,24 @@ Visualization Manager:
                             flange_adapter_link:
                               wsg_50_base_link:
                                 wsg_50_center:
-                                  {}
+                                  camera_3_color_optical_frame:
+                                    marker_link:
+                                      {}
                                 wsg_50_gripper_left:
                                   wsg_50_finger_left:
                                     {}
                                 wsg_50_gripper_right:
                                   wsg_50_finger_right:
                                     {}
-          camera_1_color_optical_frame:
-            handeye_target:
-              {}
           stand_link:
+            {}
+          table_link:
             {}
       Update Interval: 0
       Value: true
-    - ArUco dictionary: DICT_5X5_250
-      Camera FOV Marker:
-        Marker Alpha: 0.30000001192092896
-        Marker Size: 1.5
-        Value: true
-      Class: moveit_rviz_plugin/HandEyeCalibration
-      Enabled: false
-      Move Group Namespace: ""
-      Name: HandEyeCalibration
-      Planning Scene Topic: move_group/monitored_planning_scene
-      Rx: 0
-      Ry: 0
-      Rz: 0
-      Tx: 0
-      Ty: 0
-      Tz: 0
-      Value: false
-      base: base
-      camera_info_topic: ""
-      eef: wsg_50_center
-      group: manipulator
-      image_topic: ""
-      marker border (bits): 1
-      marker separation (px): 20
-      marker size (px): 200
-      markers, X: 3
-      markers, Y: 4
-      measured marker size (m): 0.060000
-      measured separation (m): 0.006000
-      object: tool0_controller
-      sensor: ""
-      sensor_mount_type: 0
-      solver: crigroup/Daniilidis1999
-      target_type: HandEyeTarget/Aruco
-    - Class: rviz/Image
-      Enabled: false
-      Image Topic: /sensor/camera/2/color/image_raw
-      Max Value: 1
-      Median window: 5
-      Min Value: 0
-      Name: Image
-      Normalize Range: true
-      Queue Size: 2
-      Transport Hint: raw
-      Unreliable: false
-      Value: false
-    - ArUco dictionary: DICT_5X5_250
-      Camera FOV Marker:
-        Marker Alpha: 0.30000001192092896
-        Marker Size: 1.5
-        Value: true
-      Class: moveit_rviz_plugin/HandEyeCalibration
-      Enabled: true
-      Move Group Namespace: ""
-      Name: HandEyeCalibration
-      Planning Scene Topic: move_group/monitored_planning_scene
-      Rx: 0
-      Ry: 0
-      Rz: 0
-      Tx: 0
-      Ty: 0
-      Tz: 0
-      Value: true
-      base: base_link
-      camera_info_topic: /sensor/camera/1/color/camera_info
-      eef: wsg_50_center
-      group: manipulator
-      image_topic: /sensor/camera/1/color/image_raw
-      marker border (bits): 1
-      marker separation (px): 20
-      marker size (px): 200
-      markers, X: 3
-      markers, Y: 4
-      measured marker size (m): 0.060000
-      measured separation (m): 0.006000
-      object: handeye_target
-      sensor: camera_1_color_optical_frame
-      sensor_mount_type: 0
-      solver: crigroup/Daniilidis1999
-      target_type: HandEyeTarget/Aruco
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /handeye_calibration/target_detection
+      Image Topic: /aruco_single/result
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -500,7 +431,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 2.9690444469451904
+      Distance: 1.9294028282165527
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -508,22 +439,20 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.057656705379486084
-        Y: 0.3062388300895691
-        Z: -4.91737750962784e-07
+        X: 0.12610012292861938
+        Y: 0.1980494260787964
+        Z: -7.450523753504967e-08
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4997972249984741
+      Pitch: 0.4947969913482666
       Target Frame: base_link
-      Yaw: 5.0249505043029785
+      Yaw: 0.7717819213867188
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: false
-  HandEye Calibration:
     collapsed: false
   Height: 1016
   Help:
@@ -536,7 +465,7 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Trajectory Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000001000000000000035e000003a2fc020000000efc0000003b00000150000000e20100001afa000000010100000003fb000000100044006900730070006c00610079007301000000000000035e0000015600fffffffb0000000a0049006d0061006700650100000000ffffffff0000005a00fffffffb0000000a0049006d0061006700650000000000ffffffff0000005a00fffffffb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670000000128000002b50000016900fffffffb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e0000000154000001e1000001e100fffffffb0000000a0049006d00610067006500000001d4000002090000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001910000024c0000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001910000024c000001e100ffffff000003d2000003a200000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000010000000000000256000003a2fc020000000cfb000000100044006900730070006c006100790073010000003b000000fc000000c700fffffffb0000000a0049006d006100670065010000013d000001310000001600fffffffb0000000a0049006d0061006700650000000108000000c90000000000000000fb0000000800480065006c00700000000342000000bb0000006e00fffffffb0000000a0056006900650077007300000003b0000000b0000000a000fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000374000001890000000000000000fb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000001600000016fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000274000001690000016900fffffffb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e0000000154000001e10000000000000000fb0000000a0049006d00610067006500000001e6000001f70000000000000000fb0000002600480061006e0064004500790065002000430061006c006900620072006100740069006f006e01000001fc000001e10000000000000000000004da000003a200000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
   Width: 1846

@@ -29,12 +29,12 @@ class Node:
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
-        rospy.loginfo("waiting for camera_color_optical_frame TF frame to be available...")
+        rospy.loginfo("waiting for camera_1_color_optical_frame TF frame to be available...")
         while not rospy.is_shutdown():
             try:
-                self.tf_buffer.lookup_transform("base_link", "camera_color_optical_frame", rospy.Time(), rospy.Duration(10))
+                self.tf_buffer.lookup_transform("base_link", "camera_1_color_optical_frame", rospy.Time(), rospy.Duration(10))
             except tf2_ros.LookupException:
-                rospy.logwarn_throttle(5, "camera_color_optical_frame TF frame not available")
+                rospy.logwarn_throttle(5, "camera_1_color_optical_frame TF frame not available")
                 continue
             else:
                 break
@@ -152,14 +152,14 @@ class Node:
         path = [self.move_group.get_current_pose(self._tcp_link).pose]
         for i, item in enumerate(targets):
             point_tf = TransformStamped()
-            point_tf.header.frame_id = "camera_color_optical_frame"
+            point_tf.header.frame_id = "camera_1_color_optical_frame"
             point_tf.header.stamp = time
             point_tf.child_frame_id = f"{prefix_goal_camera}_{i}"
             point_tf.transform.translation = Vector3(item.position.x, item.position.y, item.position.z)
             point_tf.transform.rotation = item.orientation
             self.tf_broadcaster.sendTransform(point_tf)
             tf_pos = self.tf_buffer.lookup_transform("base_link", f"{prefix_goal_camera}_{i}", time, rospy.Duration(1.0))
-            tf_ang = self.tf_buffer.lookup_transform("camera_color_optical_frame", f"{prefix_goal_camera}_{i}", time, rospy.Duration(1.0))
+            tf_ang = self.tf_buffer.lookup_transform("camera_1_color_optical_frame", f"{prefix_goal_camera}_{i}", time, rospy.Duration(1.0))
             # create new tf for level out camera inclination
             tf = TransformStamped()
             tf.header.frame_id = "base_link"
@@ -190,10 +190,10 @@ class Node:
         return TriggerResponse(True, "gripper closed")
     
     def pose_to_camera(self) -> Pose:
-        pos_tf = self.tf_buffer.lookup_transform("camera_color_optical_frame", self._tcp_link, rospy.Time(0), rospy.Duration(1.0))
+        pos_tf = self.tf_buffer.lookup_transform("camera_1_color_optical_frame", self._tcp_link, rospy.Time(0), rospy.Duration(1.0))
         rot_tf = self.tf_buffer.lookup_transform("base_link", self._tcp_link, rospy.Time(0), rospy.Duration(1.0))
         tf = TransformStamped()
-        tf.header.frame_id = "camera_color_optical_frame"
+        tf.header.frame_id = "camera_1_color_optical_frame"
         tf.header.stamp = rospy.Time.now()
         tf.child_frame_id = "tool_to_camera"
         tf.transform.translation = pos_tf.transform.translation

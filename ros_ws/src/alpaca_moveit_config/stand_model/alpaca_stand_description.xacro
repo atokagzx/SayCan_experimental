@@ -89,4 +89,99 @@
             <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
         </collision>
     </link>
+
+    
+    <!-- table -->
+    <joint name="table_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="table_link"/>
+        <origin xyz="0.0 0.0 0.016" rpy="0.0 0.0 0.0"/>
+    </joint>
+    <link name="table_link">
+        <visual>
+            <geometry>
+                <box size="${stand_width} ${stand_length} ${stand_thickness}"/>
+            </geometry>
+            <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
+            <material name="white">
+                <color rgba="0.1 0.1 0.1 0.1"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${stand_width} ${stand_length} ${stand_thickness}"/>
+            </geometry>
+            <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
+        </collision>
+    </link>
+
+<!-- 
+    <joint name="up_bound_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="up_bound_link"/>
+        <origin xyz="0.0 0.0 0.95" rpy="0.0 0.0 0.0"/>
+    </joint>
+    <link name="up_bound_link">
+        <visual>
+            <geometry>
+                <box size="${stand_width} ${stand_length} ${stand_thickness}"/>
+            </geometry>
+            <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
+            <material name="white">
+                <color rgba="0.1 0.1 0.1 0.1"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${stand_width} ${stand_length} ${stand_thickness}"/>
+            </geometry>
+            <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
+        </collision>
+    </link>
+
+    <joint name="left_wall_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="left_wall_link"/>
+        <origin xyz="0.0 0.42 0.0" rpy="${radians(90)} 0.0 0.0"/>
+    </joint>
+    <link name="left_wall_link">
+        <visual>
+            <geometry>
+                <box size="${stand_width} ${stand_length} ${stand_thickness}"/>
+            </geometry>
+            <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
+            <material name="white">
+                <color rgba="0.1 0.1 0.1 0.0"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${stand_width} ${stand_length} ${stand_thickness}"/>
+            </geometry>
+            <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
+        </collision>
+    </link>
+    
+    <joint name="right_wall_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="right_wall_link"/>
+        <origin xyz="0.0 -0.42 0.0" rpy="${radians(270)} 0.0 0.0"/>
+    </joint>
+    <link name="right_wall_link">
+        <visual>
+            <geometry>
+                <box size="${stand_width} ${stand_length} ${stand_thickness}"/>
+            </geometry>
+            <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
+            <material name="white">
+                <color rgba="0.1 0.1 0.1 0.0"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${stand_width} ${stand_length} ${stand_thickness}"/>
+            </geometry>
+            <origin xyz="0 0 ${-stand_thickness / 2}" rpy="0 0 0"/>
+        </collision>
+    </link> -->
 </robot>

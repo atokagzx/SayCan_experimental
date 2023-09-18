@@ -21,8 +21,7 @@ docker run -ti --rm \
       -v $ROOT_DIR:/workspace \
       -v $ROOT_DIR/cache:/root/.cache \
       -v $ROOT_DIR/ros_ws/src/ds4drv/udev/50-ds4drv.rules:/etc/udev/rules.d/50-ds4drv.rules \
-      --device /dev/snd \
-      --device /dev/usb \
+      -v ${SAVED_ROS_BAGS_PATH}:/root/saved_rosbags \
       --net=host \
       --privileged \
       --name saycan_exp saycan_exp-img \

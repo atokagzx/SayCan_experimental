@@ -1,0 +1,21 @@
+
+<launch>
+    <include file="$(find alpaca_bringup)/launch/robot_driver.launch" >
+        <arg name="use_gripper" value="true"/>
+        <arg name="fake" value="false"/>
+        <arg name="use_rviz" value="true"/>
+        <arg name="rviz_config" value="$(find alpaca_bringup)/rviz/bringup.rviz"/>
+    </include>
+    <include file="$(find alpaca_bringup)/launch/realsense_1.launch" />
+    <include file="$(find alpaca_bringup)/launch/realsense_2.launch" />
+    <!-- <include file="$(find alpaca_bringup)/launch/realsense_3.launch" /> -->
+    <!-- <include file="$(find alpaca_bringup)/launch/ocam_1.launch" /> -->
+
+    <node 
+        name="alpaca_control_node" 
+        pkg="alpaca_bringup"
+        type="alpaca_control_node.py" 
+        output="screen" 
+        respawn="true">
+    </node>
+</launch>

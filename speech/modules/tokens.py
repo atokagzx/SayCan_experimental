@@ -12,12 +12,13 @@ from dateutil import parser
 import traceback
 
 class TokenUpdater:
-    def __init__(self, speech_auth_token=None, oauth_token=None):
+    def __init__(self, speech_auth_token=None, oauth_token=None, salute_scope="SALUTE_SPEECH_PERS"):
         self._logger = logging.getLogger('token_updater')
         self._speech_token = None
         self._iam_token = None
         self._speech_auth_token = speech_auth_token
         self._oauth_token = oauth_token
+        self._salute_scope = salute_scope
         self._speech_token_expires = datetime.time()
         self._iam_token_expires = datetime.time()
         self._lock = threading.Lock()
@@ -78,7 +79,7 @@ class TokenUpdater:
                     headers={'Authorization' : f"Basic {self._speech_auth_token}",
                             'RqUID': str(uuid.uuid4()),
                             'Content-Type': 'application/x-www-form-urlencoded'},
-                        data={'scope': 'SALUTE_SPEECH_CORP'},
+                        data={'scope': self._salute_scope},
                         verify=False
                         )
                     resp.raise_for_status()

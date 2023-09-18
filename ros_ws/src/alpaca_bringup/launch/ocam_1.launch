@@ -1,0 +1,34 @@
+<!-- ... -->
+<launch>
+    <arg name="device_id" default="/dev/video0"/>
+    <arg name="resolution" default="0"/>
+    <!-- 0: 1280x960, 1: 1280x720, 2: 640x480, 3: 640x360 -->
+    <arg name="frame_rate" default="54"/>
+    <arg name="exposure" default="0"/>
+    <arg name="gain" default="30"/>
+    <arg name="wb_blue" default="230"/>
+    <arg name="wb_red" default="105"/>
+    <arg name="auto_exposure" default="true"/>
+    <arg name="show_image" default="false"/>
+  
+    <arg name="camera_name" default="/sensor/camera/4"/>
+    <!-- <arg name="device_info" default="package://ocam/config/camera.yaml"/> -->
+    <arg name="undistort" default="false"/>
+  
+    <node pkg="ocam" type="ocam" name="ocam" output="screen">
+      <param name="device_id" value="$(arg device_id)"/>
+      <param name="resolution" value="$(arg resolution)"/>
+      <!-- 0: 1280x960, 1: 1280x720, 2: 640x480, 3: 640x360 -->
+      <param name="frame_rate" value="$(arg frame_rate)"/>
+      <param name="exposure" value="$(arg exposure)"/>
+      <param name="gain" value="$(arg gain)"/>
+      <param name="wb_blue" value="$(arg wb_blue)"/>
+      <param name="wb_red" value="$(arg wb_red)"/>
+      <param name="auto_exposure" value="$(arg auto_exposure)"/>
+      <param name="show_image" value="$(arg show_image)"/>
+      <param name="camera_name" value="$(arg camera_name)"/>
+      <!-- <param name="device_info" value="$(arg device_info)"/> -->
+      <param name="undistort" value="$(arg undistort)"/>
+    </node>
+  </launch>
+  

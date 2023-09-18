@@ -113,7 +113,8 @@ if __name__ == '__main__':
     speech_auth_token = os.environ['SPEECH_AUTH_TOKEN']
     oauth_token = os.environ['OAUTH_TOKEN']
     folder_id = os.environ['FOLDER_ID']
-    token_updater = TokenUpdater(speech_auth_token, oauth_token)    
+    token_updater = TokenUpdater(speech_auth_token, oauth_token, salute_scope="SALUTE_SPEECH_CORP")
+    # token_updater = TokenUpdater(speech_auth_token, oauth_token, salute_scope="SALUTE_SPEECH_PERS")
     translator = Translator(folder_id, token_updater)
     recognizer = SpeechRecognizer(token_updater, ca=ca_path)
     speech_processor = SpeechProcessor(translator)

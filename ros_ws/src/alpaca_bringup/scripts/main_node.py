@@ -22,14 +22,30 @@ from prompt_tools.srv import DoneTask, DoneTaskRequest, DoneTaskResponse
 from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
 from flask import Flask, request, jsonify
 import requests
-from alpaca_logging_tools import log_rosbag
+from alpaca_logging_tools import ROSBagLoggerConnector, DynamicMetaDataDataclass
 import threading
-# task = "To make a tower using colored blocks, I should:"
-# task = "To pick red block and place it on all other items one by one, I should:"
-# task = "Match two blocks with plates of the same color:"
-# task = "Make a tower from red, blue and green blocks"
-# task = "Put the red block on each plate in turn:"
-task = "Build a tower using colored blocks:"
+topics_list = [
+'/tf',
+'/arm/1/joint_states',
+'/arm/1/wrench',
+'/state/arm/1/arm_state',
+'/sensor/camera/1/color/camera_info',
+'/sensor/camera/1/color/image_raw',
+'/sensor/camera/1/depth/camera_info',
+'/sensor/camera/1/depth/image_rect_raw',
+'/sensor/camera/1/depth/color/points',
+'/sensor/camera/1/aligned_depth_to_color/camera_info',
+'/sensor/camera/1/aligned_depth_to_color/image_raw',
+'/sensor/camera/2/color/camera_info',
+'/sensor/camera/2/color/image_raw',
+'/sensor/camera/2/depth/camera_info',
+'/sensor/camera/2/depth/image_rect_raw',
+'/sensor/camera/2/depth/color/points',
+'/sensor/camera/2/aligned_depth_to_color/camera_info',
+'/sensor/camera/2/aligned_depth_to_color/image_raw',
+'/sensor/camera/3/image_raw',
+'/sensor/camera/3/camera_info'
+]
 class MainNode:
     rate_srv_name = "/alpaca/prompt/rate"
     add_done_task_srv_name = "/alpaca/prompt/add_done_task"
@@ -46,6 +62,24 @@ class MainNode:
         self._force_stop_flag = False
         self._selected_action = ""
         wait_services = []
+        self._rosbag_logger = ROSBagLoggerConnector('http://0.0.0.0:8011',
+                                            source_type='internal',
+                                            source='Sber',
+                                            team='Yaroslav',
+                                            version_of_requirements='0.1',
+                                            dataset_types='IM',
+                                            method_collection='agent',
+                                            teleop_device='',
+                                            repository_link='',
+                                            branch_name='develop',
+                                            commit_hash='',
+                                            agents_weight_link='',
+                                            language_of_instruction='eng',
+                                            instruction_source='LLM',
+                                            planner_weight_link='',
+                                            robot_type='UR5',
+                                            gripper_type='WSG-50',
+                                            robot_configuration='alpaca_stand_description.xacro')
         if self._only_plan:
             wait_services = [self.rate_srv_name, self.add_done_task_srv_name, self.reset_done_tasks_srv_name]
         else:
@@ -176,15 +210,6 @@ class MainNode:
         self._selected_action = ""
         subtask_id = 1
         while not rospy.is_shutdown():
-            log_data = {
-                'scenario_id': scenario_id,
-                'subtask_id': subtask_id,
-                'success_of_tasks': 0,
-                'scenario_task': task,
-                'planned_subtasks': "",
-                'current_instruction': '',
-            }
-            
             if self._force_stop_flag:
                 rospy.loginfo("force stop flag is set, exiting")
                 break
@@ -222,12 +247,17 @@ class MainNode:
             if self._force_stop_flag:
                 rospy.loginfo("force stop flag is set, exiting")
                 break
-            with log_rosbag('http://0.0.0.0:8011', **log_data) as (response, done_req):
-                rospy.loginfo(f"rosbag srv resp:\ncode: {response.status_code}\ntext: {response.text}")
-                done_req.update({
-                    'planned_subtasks': "\n".join(_done_tasks),
-                    'current_instruction': selected_action["text"]
-                })
+            log_data_dict = {
+                'scenario_id': scenario_id,
+                'subtask_id': subtask_id,
+                'success_of_tasks': 0,
+                'scenario_task': task,
+                'planned_subtasks': "\n".join(_done_tasks),
+                'current_instruction': selected_action["text"]
+            }
+            with self._rosbag_logger.log_rosbag(metadata = DynamicMetaDataDataclass(**log_data_dict), 
+                                               topics_list = topics_list) as (response, done_req):
+                rospy.loginfo(f"rosbag srv resp:\n{response}")
                 if not self._only_plan:
                     ret = self._pick_place(selected_action, stamp)
                     if not ret:
