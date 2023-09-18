@@ -18,7 +18,7 @@
 	url = https://github.com/ros-planning/moveit_calibration.git
 [submodule "ros_ws/src/alpaca_logging/arm_msgs"]
 	path = ros_ws/src/alpaca_logging/arm_msgs
-	url = git@git.sberrobots.ru:manipulation-foundation/alpaca/alpaca_joy.git
+	url = git@git.sberrobots.ru:data-collection/arm_msgs.git
 [submodule "ros_ws/src/alpaca_logging/alpaca_logging_tools"]
 	path = ros_ws/src/alpaca_logging/alpaca_logging_tools
 	url = git@git.sberrobots.ru:data-collection/alpaca_logging_tools.git
