@@ -1,6 +1,6 @@
 [submodule "ros_ws/src/Universal_Robots_ROS_Driver"]
 	path = ros_ws/src/Universal_Robots_ROS_Driver
-	url = git@github.com:atokagzx/Universal_Robots_ROS_Driver.git
+	url = git@git.sberrobots.ru:data-collection/Universal_Robots_ROS_Driver.git
 [submodule "ros_ws/src/universal_robot"]
 	path = ros_ws/src/universal_robot
 	url = https://github.com/ros-industrial/universal_robot.git
@@ -9,7 +9,7 @@
 	url = https://github.com/ros-industrial/industrial_core.git
 [submodule "ros_ws/src/wsg50-ros-pkg"]
 	path = ros_ws/src/wsg50-ros-pkg
-	url = https://github.com/atokagzx/wsg50-ros-pkg.git
+	url = git@git.sberrobots.ru:manipulation-foundation/alpaca/wsg50-ros-pkg.git
 [submodule "modules/GroundingDINO"]
 	path = modules/GroundingDINO
 	url = https://github.com/IDEA-Research/GroundingDINO.git
@@ -18,10 +18,10 @@
 	url = https://github.com/ros-planning/moveit_calibration.git
 [submodule "ros_ws/src/alpaca_logging/arm_msgs"]
 	path = ros_ws/src/alpaca_logging/arm_msgs
-	url = git@github.com:atokagzx/arm_msgs.git
+	url = git@git.sberrobots.ru:manipulation-foundation/alpaca/alpaca_joy.git
 [submodule "ros_ws/src/alpaca_logging/alpaca_logging_tools"]
 	path = ros_ws/src/alpaca_logging/alpaca_logging_tools
-	url = git@github.com:atokagzx/alpaca_logging_tools.git
+	url = git@git.sberrobots.ru:data-collection/alpaca_logging_tools.git
 [submodule "ros_ws/src/ds4drv"]
 	path = ros_ws/src/ds4drv
 	url = https://github.com/naoki-mizuno/ds4drv
@@ -30,10 +30,13 @@
 	url = https://github.com/naoki-mizuno/ds4_driver.git
 [submodule "ros_ws/src/alpaca_logging/alpaca_joy"]
 	path = ros_ws/src/alpaca_logging/alpaca_joy
-	url = git@github.com:atokagzx/alpaca_joy.git
+	url = git@git.sberrobots.ru:manipulation-foundation/alpaca/alpaca_joy.git
 [submodule "ros_ws/src/dualshock_teleop"]
 	path = ros_ws/src/dualshock_teleop
 	url = git@git.sberrobots.ru:manipulation-foundation/perception/dualshock_teleop.git
 [submodule "ros_ws/src/ocam"]
 	path = ros_ws/src/ocam
 	url = https://github.com/AerialRobotics-IITK/ocam.git
+[submodule "ros_ws/src/skild"]
+	path = ros_ws/src/skild
+	url = git@git.sberrobots.ru:manipulation-foundation/alpaca/skild.git

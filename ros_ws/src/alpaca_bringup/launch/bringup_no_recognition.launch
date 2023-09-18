@@ -8,7 +8,8 @@
     </include>
     <include file="$(find alpaca_bringup)/launch/realsense_1.launch" />
     <include file="$(find alpaca_bringup)/launch/realsense_2.launch" />
-    <include file="$(find alpaca_bringup)/launch/ocam_1.launch" />
+    <!-- <include file="$(find alpaca_bringup)/launch/realsense_3.launch" /> -->
+    <!-- <include file="$(find alpaca_bringup)/launch/ocam_1.launch" /> -->
 
     <node 
         name="alpaca_control_node" 

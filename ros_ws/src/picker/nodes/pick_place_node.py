@@ -18,8 +18,6 @@ from picker.srv import PickConfig, PickConfigResponse, PickConfigRequest
 from picker.srv import PickPlace, PickPlaceResponse, PickPlaceRequest
 from modules.ros_utils import DataSubscriber
 
-HOME_POSITION = (0.2, -0.5, 0.7, np.pi, 0, -np.pi/2)
-
 def search_neighbourhood(positions: List[ac.Point6D], radius: float, step: float):
     yield positions
     for i in range(5):
@@ -99,7 +97,7 @@ class PickPlaceSkill:
             # open gripper
             set_gripper_wrapper(False)
             # move to start position
-            move_gripper_wrapper([ac.Point6D(0.2, -0.5, 0.7, np.pi, 0, -np.pi/2),
+            move_gripper_wrapper([ac.Point6D(0.0, -0.4, 0.5, np.pi, 0, -np.pi/2),
                                 ac.Point6D(pick_position[0], pick_position[1], pick_position[2] - 0.2, np.pi, 0, pick_orientation),
                                 ac.Point6D(pick_position[0], pick_position[1], pick_position[2] - 0.0085, np.pi, 0, pick_orientation)])
             # close gripper
@@ -110,11 +108,11 @@ class PickPlaceSkill:
             # open gripper
             set_gripper_wrapper(False)
             # move to start position
-            move_gripper_wrapper([ac.Point6D(0.2, -0.5, 0.7, np.pi, 0, -np.pi/2)])
+            move_gripper_wrapper([ac.Point6D(0.0, -0.4, 0.5, np.pi, 0, -np.pi/2)])
         except ValueError as e:
             # open gripper
             set_gripper_wrapper(False)
-            move_gripper_wrapper([ac.Point6D(0.2, -0.5, 0.7, np.pi, 0, -np.pi/2)])
+            move_gripper_wrapper([ac.Point6D(0.0, -0.4, 0.5, np.pi, 0, -np.pi/2)])
             return False, PickPlaceResponse(success=False, reason=f"failed to execute pick_place skill: {e}")
         else:
             return True, PickPlaceResponse(success=True)
@@ -173,7 +171,7 @@ class PickPlaceSkill:
     
 if __name__ == "__main__":
     ac.init_node("pick_place_skill_node")
-    ret = ac.move_by_camera([ac.Point6D(*HOME_POSITION)])
+    ret = ac.move_by_camera([ac.Point6D(0.0, -0.4, 0.5, np.pi, 0, -np.pi/2)])
     if not ret:
         rospy.logerr("Failed to move to start position")
         exit(1)

@@ -11,7 +11,7 @@
     <arg name="auto_exposure" default="true"/>
     <arg name="show_image" default="false"/>
   
-    <arg name="camera_name" default="/sensor/camera/3"/>
+    <arg name="camera_name" default="/sensor/camera/4"/>
     <!-- <arg name="device_info" default="package://ocam/config/camera.yaml"/> -->
     <arg name="undistort" default="false"/>
   

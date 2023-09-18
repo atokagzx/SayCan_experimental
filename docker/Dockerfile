@@ -174,7 +174,7 @@ RUN pip3 install --upgrade jax
 # ENV LD_LIBRARY_PATH="/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH"
 RUN apt update && apt install -y python3-pyaudio alsa-base alsa-utils pulseaudio
 RUN pip3 install pydantic==2.3.0 pandas pycryptodomex python-gnupg
-RUN apt update && apt install -y ros-noetic-joy ros-noetic-imu-transformer ros-noetic-imu-tools
+RUN apt update && apt install -y ros-noetic-joy ros-noetic-imu-transformer ros-noetic-imu-tools ros-noetic-aruco-ros
 RUN pip3 install pyudev evdev
 RUN apt update && apt install -y libudev-dev libv4l-dev
 
