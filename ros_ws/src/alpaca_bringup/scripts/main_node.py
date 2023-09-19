@@ -303,10 +303,18 @@ class RESTService:
         return True, "OK"
 
     def _execute(self):
-        task = request.json["task"]
-        scenario_id = request.json["scenario_id"]
+        try:
+            task = request.json["task"]
+            scenario_id = request.json["scenario_id"]
+        except KeyError as e:
+            rospy.logerr(e)
+            return f"missing key: {e}", 400
         rospy.loginfo(f'received task: "{task}"\nscenario_id: "{scenario_id}"')
-        ret, msg = self._run_executor(task, scenario_id)
+        try:
+            ret, msg = self._run_executor(task, scenario_id)
+        except Exception as e:
+            rospy.logerr(e)
+            return str(e), 500
         if ret:
             return msg, 200
         else:

@@ -39,28 +39,19 @@ class AlpacaModel(LanguageModel):
 
     if tokenizer is None or model is None:
         raise Exception("Could not load model or tokenizer")
-    # tokenizer.add_special_tokens({"pad_token": " "})
-    # tokenizer.pad_token_id = (
-    # 0  # unk. we want this to be different from the eos token
-    # )
 
     def get_logits_for_query(self, instruction):
         inputs = self.tokenizer(instruction, return_tensors='pt')
-        # print(f"DEBUG tokenizer output: {inputs}")
-
-        # llama-7b hf response
         outputs = self.model(
             input_ids=inputs.input_ids,
             attention_mask=inputs.attention_mask,
-            # output_attentions=True,  # logging weights attention block
         )
         offsets = inputs.attention_mask.sum(dim=1)
         attention_mask = inputs.attention_mask
         return offsets, attention_mask, outputs.past_key_values
     
     def _score_tokens(self, prompt: str, offsets_query, attention_mask_query, past_key_values_query) -> List[Dict[str, Any]]:
-        # add padding to the prompt
-        inputs = self.tokenizer(prompt, return_tensors="pt")#, padding='max_length', max_length=max_tokens)
+        inputs = self.tokenizer(prompt, return_tensors="pt")
         num_completion_tokens = inputs.input_ids.shape[1]
         suffixes_position_ids = (torch.arange(0, num_completion_tokens) +
                                 offsets_query[:, None]) # broadcast
@@ -106,12 +97,9 @@ class AlpacaModel(LanguageModel):
         base_prompt, variants = prompt.split("<|endofprompt|>")
         history, variants = variants.split("<|endofhistory|>")
         actions = list(variants.split("<|endofvariant|>"))
-        base_prompt_ids = self.tokenizer(base_prompt, return_tensors="pt").input_ids.tolist()[0]
         history_ids = self.tokenizer(history, return_tensors="pt").input_ids.tolist()[0]
-        # base_prompt_tokens = self.tokenizer.convert_ids_to_tokens(base_prompt_ids)
         response = []
         action_ids_lens = []
-
         if self.base_prompt is None:
             offsets_query, attention_mask_query, past_key_values_query = self.get_logits_for_query(base_prompt)
             self.base_prompt = {
@@ -123,22 +111,13 @@ class AlpacaModel(LanguageModel):
             offsets_query = self.base_prompt["offsets_query"]
             attention_mask_query = self.base_prompt["attention_mask_query"]
             past_key_values_query = self.base_prompt["past_key_values_query"]
-        # for action in actions:
-        #     ids = self.tokenizer(action, return_tensors="pt").input_ids.tolist()[0]
-        #     action_ids_lens.append(len(ids))
-        # max_action_ids_len = max(action_ids_lens) + len(base_prompt_ids)
         for action in actions:
             prompt_to_model = history + action
             scored_tokens_dict, prompt_with_action_ids, _past_key_values = self._score_tokens(prompt_to_model, offsets_query, attention_mask_query, past_key_values_query)
-            # remove base prompt tokens from the scored tokens
-            # scored_tokens_dict = scored_tokens_dict[1:]
             scored_tokens_dict = scored_tokens_dict[len(history_ids):]
-            # print(f"DEBUG scored_tokens_dict: {scored_tokens_dict}")
-            # print("fkljsdfjklndsfkdsfsdfsklj"*20)
             generated_logprobs = {"tokens": [token['token'] for token in scored_tokens_dict],
                         "token_logprobs": [token['score'] for token in scored_tokens_dict]} if logprobs else None
             response.append({"text": self.tokenizer.decode(prompt_with_action_ids).strip(), 
                             "logprobs": generated_logprobs,
                             "finish_reason": "ok"})
-            # print(f"DEBUG response: {response}")
         return json.dumps(response, ensure_ascii=False)

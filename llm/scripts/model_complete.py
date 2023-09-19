@@ -5,18 +5,18 @@ from typing import Union
 from get_models import ALPACA_ID, LLAMA_ID, TOKENIZER_ID
 from peft import PeftModel
 from simple_ai.api.grpc.completion.server import LanguageModel
-from transformers import GenerationConfig, LLaMAForCausalLM, LLaMATokenizer
+from transformers import GenerationConfig, LlamaForCausalLM, LlamaTokenizer
 import json
 
 @dataclass(unsafe_hash=True)
 class AlpacaModel(LanguageModel):
     try:
-        tokenizer = LLaMATokenizer.from_pretrained(TOKENIZER_ID)
+        tokenizer = LlamaTokenizer.from_pretrained(TOKENIZER_ID)
     except Exception as ex:
         logging.exception(f"Could not load tokenizer: {ex}")
         tokenizer = None
     try:
-        model = LLaMAForCausalLM.from_pretrained(
+        model = LlamaForCausalLM.from_pretrained(
             LLAMA_ID,
             load_in_8bit=True,
             device_map="auto",

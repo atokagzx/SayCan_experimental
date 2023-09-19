@@ -1,6 +1,7 @@
 
 <launch>
     <arg name="prompt" default="true"/>
+    <arg name="only_plan" default="false"/>
     <param name="/alpaca/names_to_detect" 
         type="str" 
         value="|color| block;fish;|color| square;|color| box;|color| rectangle;|color| cube;|color| small block"
@@ -12,8 +13,8 @@
             <arg name="rviz_config" value="$(find alpaca_bringup)/rviz/bringup.rviz"/>
     </include>
     <include file="$(find alpaca_bringup)/launch/realsense_1.launch" />
-    <include file="$(find alpaca_bringup)/launch/realsense_2.launch" />
-    <include file="$(find alpaca_bringup)/launch/ocam_1.launch" />
+    <!-- <include file="$(find alpaca_bringup)/launch/realsense_2.launch" /> -->
+    <!-- <include file="$(find alpaca_bringup)/launch/ocam_1.launch" /> -->
 
     <node 
         name="alpaca_control_node" 
@@ -34,5 +35,6 @@
         type="main_node.py" 
         output="screen" 
         respawn="true">
+        <param name="only_plan" value="$(arg only_plan)"/>
     </node>
 </launch>
