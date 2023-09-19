@@ -58,7 +58,10 @@ class LLMServiceNode:
         self._prompt_monitoring_topic.publish(monitoring_msg)
         available_objects = self._prompt.pick_names.copy()
         available_objects.extend(self._prompt.place_names)
+        available_objects = filter(lambda x: x not in ("", " "), available_objects)
+        available_objects = sorted(available_objects)
         available_objects = list(set(available_objects))
+        # available_objects = ["blue block", "red block", "green block", "yellow block", "blue plate", "green plate", "yellow plate", "fish"]
         rates = self._rate_actions(self._prompt.body, task, self._prompt.actions, available_objects)
         monitoring_msg = PromptMonitoring()
         monitoring_msg.header.stamp = stamp + rospy.Duration(0.1)
