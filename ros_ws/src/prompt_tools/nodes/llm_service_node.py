@@ -98,7 +98,7 @@ class LLMServiceNode:
         rate = rospy.Rate(0.5)
         while True:
             try:
-                completion = openai.Completion.create(model="llama-7B-4b", prompt=prompt, max_tokens=0, logprobs=True, echo=True)
+                completion = openai.Completion.create(model=self.model_name, prompt=prompt, max_tokens=0, logprobs=True, echo=True)
                 print(completion)
             except openai.APIError as e:
                 rospy.logerr(f"got APIError exception (maybe model not loaded by server?): {e}")
